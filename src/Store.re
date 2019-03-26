@@ -2,7 +2,7 @@ open Isolinear_Types;
 
 module Make = (ModelImpl: Model) => {
     type state = ModelImpl.state;
-    type action = ModelImpl.action;
+    type actions = ModelImpl.actions;
 
     let updater = ModelImpl.updater;
 
@@ -15,7 +15,6 @@ module Make = (ModelImpl: Model) => {
     let poll = () => ();
 
     let subscribe = (fn) => {
-
         _subscribers := [fn, ..._subscribers^];
 
         () => {
@@ -27,8 +26,6 @@ module Make = (ModelImpl: Model) => {
         let (newState, effect) = updater(currentState^, action);
         currentState := newState;
 
-        Effect.run(effect);
-
-        List.iter((f) => f(newState), _subscribers^);
+        List.iter((f) => f(newState, effect), _subscribers^);
     };
 };

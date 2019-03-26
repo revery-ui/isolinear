@@ -7,5 +7,5 @@ open Isolinear_Types;
  */
 module Make: (ModelImpl: Model) => Store with
        type state = ModelImpl.state and
-       type action = ModelImpl.action;
+       type actions = ModelImpl.actions;
 

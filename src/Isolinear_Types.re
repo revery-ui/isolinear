@@ -1,18 +1,5 @@
-type subscriber('a) = 'a => unit;
+type subscriber('a, 'b) = ('a, 'b) => unit;
 type unsubscribe = unit => unit;
-
-module type Store = {
-    type state;
-    type action;
-
-    let getState: unit => state;
-
-    let poll: unit => unit;
-
-    let subscribe: subscriber(state) => unsubscribe;
-
-    let dispatch: action => unit;
-};
 
 module Effect = {
     type effectFunction;
@@ -35,29 +22,24 @@ module Effect = {
     /* let create: (~name: string, ~f:effectFunction, ()) => Effect.t; */
 };
 
-/* module type Effect = { */
-/*     type t('a) = { */
-/*         name: string, */
-/*         f: unit => option('a), */
-/*     } */
 
-/*     let none = { */
-/*         name: "None", */
-/*         f: () => None, */
-/*     }; */
+module type Store = {
+    type state;
+    type actions;
 
-/*     let batch = (~name="Batched Effects", effects: list(Effect.) */
+    let getState: unit => state;
 
-/*     let create = (~name, ~f) => { */
-/*         name, */
-/*         f, */
-/*     }; */
-/* }; */
+    let poll: unit => unit;
+
+    let subscribe: subscriber(state, Effect.t(actions)) => unsubscribe;
+
+    let dispatch: actions => unit;
+};
 
 module type Model = {
     type state;
-    type action;
+    type actions;
 
     let initialState: state;
-    let updater: (state, action) => (state, Effect.t(action));
+    let updater: (state, actions) => (state, Effect.t(actions));
 };

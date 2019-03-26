@@ -20,4 +20,4 @@ Having a centralized model, _external_ to the UI, allows for some powerful capab
 
 ### License
 
-[MIT License](./LICENSE)]
+[MIT License](./LICENSE)

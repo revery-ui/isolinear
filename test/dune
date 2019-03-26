@@ -1,0 +1,6 @@
+(executable
+    (name IsolinearTest)
+    (public_name IsolinearTests)
+    (package isolinear-test)
+    (libraries
+            ))

@@ -1,0 +1,16 @@
+{
+  "source": "./package.json",
+  "override": {
+      "build": ["dune build --root . -j4"],
+      "script": {
+          "run": "echo hi"
+      },
+      "dependencies": {
+            "@reason-native/rely": "*"
+      },
+      "install": [
+          "esy-installer isolinear.install",
+          "esy-installer isolinear-test.install"
+      ]
+  }
+}

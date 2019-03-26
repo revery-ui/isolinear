@@ -7,8 +7,12 @@ steps:
     displayName: 'Install Dependencies: esy install'
   - script: esy build
     displayName: 'Build: esy build'
-  - script: esy x IsolinearTests
-    displayName: 'Unit Tests: esy x IsolinearTests'
+  - script: esy @test install
+    displayName: "Test: install"
+  - script: esy @test build
+    displayName: "Test: build"
+  - script: esy @test x IsolinearTests
+    displayName: "Test: run"
   # - script: esy @bench install
   #   displayName: "Bench: install"
   # - script: esy @bench build

@@ -4,7 +4,7 @@
   "description": "Experimental state management framework for native Reason",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "esy x IsolinearTests"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@opam/dune": "1.7.3",
-    "@reason-native/rely": "*",
     "@esy-ocaml/reason": ">= 3.4.0 < 3.5.0",
     "refmterr": "*",
     "ocaml": "~4.7.0"

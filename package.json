@@ -1,0 +1,19 @@
+{
+  "name": "isolinear",
+  "version": "1.0.0",
+  "description": "Experimental state management framework for native Reason",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bryphe/isolinear.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bryphe/isolinear/issues"
+  },
+  "homepage": "https://github.com/bryphe/isolinear#readme"
+}

@@ -15,12 +15,12 @@
   "bugs": {
     "url": "https://github.com/bryphe/isolinear/issues"
   },
-  "homepage": "https://github.com/bryphe/isolinear#readme"
+  "homepage": "https://github.com/bryphe/isolinear#readme",
   "esy": {
-    "build": "refmterr dune build -p #{self.name}",
+    "build": "refmterr dune build -p #{self.name}"
   },
   "dependencies": {
-    "@opam/dune": "*",
+    "@opam/dune": "1.7.3",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "*",

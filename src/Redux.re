@@ -5,7 +5,7 @@ module Make = (ModelImpl: Model) => {
     type state = ModelImpl.state;
     type action = ModelImpl.action;
 
-    let reducer = ModelImpl.reducer;
+    let updater = ModelImpl.updater;
 
     let currentState: ref(state) = ref(ModelImpl.initialState);
 
@@ -25,14 +25,11 @@ module Make = (ModelImpl: Model) => {
     };
 
     let dispatch = (action) => {
-        let newState = reducer(currentState^, action);
+        let (newState, effect) = updater(currentState^, action);
         currentState := newState;
+
+        Effect.run(effect);
 
         List.iter((f) => f(newState), _subscribers^);
     };
-};
-
-module Enhance = (StoreImpl: Store, EnhancerImpl: StoreEnhancer with type action = StoreImpl.action and type state = StoreImpl.state) => {
-    /* TODO: no-op */
-    include StoreImpl;
 };

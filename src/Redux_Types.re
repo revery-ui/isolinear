@@ -14,25 +14,50 @@ module type Store = {
     let dispatch: action => unit;
 };
 
-module type StoreEnhancer  = {
-    type state;
-    type action;
-
-    type store = {
-        getState: unit => state,
-        subscribe: subscriber(state) => unsubscribe,
-        dispatch: action => unit,
+module Effect = {
+    type effectFunction;
+    type t('a) = {
+        name: string,
+        f: unit => option('a),
     };
 
-    type storeCreator = unit => store;
+    let none: t('a) = {
+       name: "None",
+       f: () => None,
+    };
 
-    let createStore: storeCreator => store;
+    let run = (effect: t('a)) => {
+        let _ = effect.f();   
+    };
+
+    /* let batch: (~name: string, List(t)) => Effect.t; */
+
+    /* let create: (~name: string, ~f:effectFunction, ()) => Effect.t; */
 };
+
+/* module type Effect = { */
+/*     type t('a) = { */
+/*         name: string, */
+/*         f: unit => option('a), */
+/*     } */
+
+/*     let none = { */
+/*         name: "None", */
+/*         f: () => None, */
+/*     }; */
+
+/*     let batch = (~name="Batched Effects", effects: list(Effect.) */
+
+/*     let create = (~name, ~f) => { */
+/*         name, */
+/*         f, */
+/*     }; */
+/* }; */
 
 module type Model = {
     type state;
     type action;
 
     let initialState: state;
-    let reducer: (state, action) => state;
+    let updater: (state, action) => (state, Effect.t(action));
 };

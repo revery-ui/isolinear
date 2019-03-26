@@ -1,5 +1,4 @@
 (library
-  (name lib)
+  (name isolinear)
   (flags (-w -40 -w +26))
-  (public_name hello-reason)
-  (libraries console.lib pastel.lib))
+  (public_name isolinear))

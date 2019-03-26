@@ -4,7 +4,7 @@
   "description": "Experimental state management framework for native Reason",
   "main": "index.js",
   "scripts": {
-    "test": "esy x IsolinearTests"
+    "format": "esy dune build @fmt --auto-promote"
   },
   "repository": {
     "type": "git",

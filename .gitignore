@@ -62,5 +62,4 @@ typings/
 
 .merlin
 _esy/
-esy.lock/
 *.install

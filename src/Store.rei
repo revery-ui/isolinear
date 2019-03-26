@@ -1,9 +1,9 @@
-open Redux_Types;
+open Isolinear_Types;
 
 /*
  * Make
  *
- * Functor that creates a Redux store based on a Model
+ * Functor that creates an Isolinear store based on a Model
  */
 module Make: (ModelImpl: Model) => Store with
        type state = ModelImpl.state and

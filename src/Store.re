@@ -1,5 +1,4 @@
-open Redux_Types;
-
+open Isolinear_Types;
 
 module Make = (ModelImpl: Model) => {
     type state = ModelImpl.state;

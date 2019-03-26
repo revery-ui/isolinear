@@ -11,9 +11,26 @@
     "url": "git+https://github.com/bryphe/isolinear.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/bryphe/isolinear/issues"
   },
   "homepage": "https://github.com/bryphe/isolinear#readme"
+  "esy": {
+    "build": "refmterr dune build -p #{self.name}",
+  },
+  "dependencies": {
+    "@opam/dune": "*",
+    "@reason-native/console": "*",
+    "@reason-native/pastel": "*",
+    "@reason-native/rely": "*",
+    "@esy-ocaml/reason": ">= 3.4.0 < 3.5.0",
+    "refmterr": "*",
+    "ocaml": "~4.7.0"
+  },
+  "devDependencies": {
+    "@opam/merlin": "*",
+    "ocaml": "~4.7.0",
+    "@opam/odoc": "*"
+  }
 }

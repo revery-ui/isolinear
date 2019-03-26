@@ -5,7 +5,6 @@ open Isolinear_Types;
  *
  * Functor that creates an Isolinear store based on a Model
  */
-module Make: (ModelImpl: Model) => Store with
-       type state = ModelImpl.state and
-       type actions = ModelImpl.actions;
-
+module Make:
+  (ModelImpl: Model) =>
+   Store with type state = ModelImpl.state and type actions = ModelImpl.actions;

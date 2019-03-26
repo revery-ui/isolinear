@@ -1,10 +1,10 @@
 {
   "source": "./package.json",
+  "scripts": {
+      "run": "esy '@test' x IsolinearTests"
+  },
   "override": {
       "build": ["dune build --root . -j4"],
-      "script": {
-          "run": "echo hi"
-      },
       "dependencies": {
             "@reason-native/rely": "*"
       },

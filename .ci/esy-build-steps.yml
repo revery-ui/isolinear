@@ -11,7 +11,7 @@ steps:
     displayName: "Test: install"
   - script: esy @test build
     displayName: "Test: build"
-  - script: esy @test x IsolinearTests
+  - script: esy @test run
     displayName: "Test: run"
   # - script: esy @bench install
   #   displayName: "Bench: install"

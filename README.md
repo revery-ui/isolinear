@@ -1,3 +1,5 @@
+[![Build Status](https://bryphe.visualstudio.com/isolinear/_apis/build/status/bryphe.isolinear?branchName=master)](https://bryphe.visualstudio.com/isolinear/_build/latest?definitionId=22&branchName=master)
+
 # isolinear
 
 Experimental state management framework for native Reason

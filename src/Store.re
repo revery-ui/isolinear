@@ -1,34 +1,31 @@
 open Isolinear_Types;
 
 module Make = (ModelImpl: Model) => {
-    type state = ModelImpl.state;
-    type action = ModelImpl.action;
+  type state = ModelImpl.state;
+  type actions = ModelImpl.actions;
 
-    let updater = ModelImpl.updater;
+  let updater = ModelImpl.updater;
 
-    let currentState: ref(state) = ref(ModelImpl.initialState);
+  let currentState: ref(state) = ref(ModelImpl.initialState);
 
-    let getState = () => currentState^;
+  let getState = () => currentState^;
 
-    let _subscribers = ref([]);
+  let _subscribers = ref([]);
 
-    let poll = () => ();
+  let poll = () => ();
 
-    let subscribe = (fn) => {
+  let subscribe = fn => {
+    _subscribers := [fn, ..._subscribers^];
 
-        _subscribers := [fn, ..._subscribers^];
-
-        () => {
-            _subscribers := List.filter(f => f != fn, _subscribers^);
-        }
+    () => {
+      _subscribers := List.filter(f => f != fn, _subscribers^);
     };
+  };
 
-    let dispatch = (action) => {
-        let (newState, effect) = updater(currentState^, action);
-        currentState := newState;
+  let dispatch = action => {
+    let (newState, effect) = updater(currentState^, action);
+    currentState := newState;
 
-        Effect.run(effect);
-
-        List.iter((f) => f(newState), _subscribers^);
-    };
+    List.iter(f => f(newState, effect), _subscribers^);
+  };
 };

@@ -1,6 +1,15 @@
+(library
+    (name IsolinearTestLib)
+    (public_name isolinear-test.lib)
+    (ocamlopt_flags -linkall -g)
+    (libraries isolinear rely.lib)
+    (modules (:standard \ IsolinearTests)))
+
 (executable
     (name IsolinearTests)
     (public_name IsolinearTests)
     (package isolinear-test)
+    (modules IsolinearTests)
     (libraries
+        isolinear-test.lib
             ))

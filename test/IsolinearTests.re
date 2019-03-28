@@ -1,2 +1,1 @@
-/* no-op */
-print_endline ("Hello, world");
+IsolinearTestLib.TestFramework.cli();

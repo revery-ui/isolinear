@@ -1,33 +1,23 @@
 open TestFramework;
 
+open Isolinear;
+
 type testActions =
   | Change(string);
 
 describe("Isolinear", ({describe, _}) =>
   describe("subscribe", ({test, _}) =>
     test("state subscription fires on dispatch", ({expect}) => {
-      open Isolinear;
-
       let updater = (s, a) =>
         switch (a) {
-        | Change(v) => (s ++ v, Isolinear_Types.Effect.none)
+        | Change(v) => (s ++ v, Effect.none)
         };
 
-      module MyStore =
-        Isolinear.Store.Make({
-          type state = string;
-          type actions = testActions;
-          let initialState = "hello";
-          let updater = updater;
-        });
+      let (dispatch, _) = Store.create(~initialState="hello", ~updater, ());
 
-      let lastValue = ref("");
+      let (newState, _) = dispatch(Change(" world"));
 
-      let _ = MyStore.subscribe((v, _effect) => lastValue := v);
-
-      MyStore.dispatch(Change(" world"));
-
-      expect.string(lastValue^).toEqual("hello world");
+      expect.string(newState).toEqual("hello world");
     })
   )
 );

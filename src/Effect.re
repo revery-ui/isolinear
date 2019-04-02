@@ -1,23 +1,29 @@
-type effectFunction;
-type t = {
+type dispatchFunction('a) = ('a) => unit;
+
+type t('a) = {
   name: string,
-  f: unit => unit,
+  f: dispatchFunction('a) => unit,
 };
 
-let create = (~name: string, f) => {
+let create = (~name: string, f: unit => unit) => {
     name,
-    f
+    f: (_) => f(),
 };
 
-let none: t = {name: "None", f: () => ()};
-
-let run = (effect: t) => {
-  effect.f();
+let createWithDispatch = (~name: string, f: dispatchFunction('a) => unit) => {
+    name,
+    f,
 };
 
-let batch = (effects: list(t)) => {
-   let execute = () => {
-       List.iter((e) => run(e), effects);
+let none: t('a) = {name: "None", f: (_) => ()};
+
+let run = (effect: t('a), dispatch: dispatchFunction('a)) => {
+  effect.f(dispatch);
+};
+
+let batch = (effects: list(t('a))) => {
+   let execute = (dispatch) => {
+       List.iter((e) => run(e, dispatch), effects);
    };
 
    {

@@ -15,7 +15,7 @@ type t('a) = {
    subscribers: ref(list(subscriber('a))),
 };
 
-let create = (f: streamFunc('a)) => {
+let ofDispatch = (f: streamFunc('a)) => {
 
     let subscribers: ref(list(subscriber('a))) = ref([]);
 
@@ -31,6 +31,22 @@ let create = (f: streamFunc('a)) => {
     }
 };
 
+let create = () => {
+    let _dispatchFunction = ref(None);
+
+    let stream = ofDispatch((dispatch) => {
+        _dispatchFunction := Some(dispatch);
+    });
+
+    let dispatch = (v) => {
+        switch(_dispatchFunction^) {
+        | Some(f) => f(v)
+        | None => ();
+        }
+    };
+
+    (stream, dispatch)
+};
 
 let subscribe = (v: t('a), f: sendFunc('a)) => {
    let newId = v.lastSubscriberId^ + 1;
@@ -45,7 +61,7 @@ let subscribe = (v: t('a), f: sendFunc('a)) => {
 };
 
 let map = (v: t('a), f: ('a) => option('b)) => {
-   create((send) => {
+   ofDispatch((send) => {
        subscribe(v, (x) => {
             switch (f(x)) {
             | None => ()

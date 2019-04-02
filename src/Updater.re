@@ -1,5 +1,5 @@
 type t('actions, 'state) =
-  ('state, 'actions) => ('state, Effect.t);
+  ('state, 'actions) => ('state, Effect.t('actions));
 
 type reducer('actions, 'state) = ('state, 'actions) => 'state;
 

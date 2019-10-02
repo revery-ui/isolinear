@@ -23,10 +23,10 @@
     "@opam/dune": "1.7.3",
     "@esy-ocaml/reason": ">= 3.4.0 < 3.5.0",
     "refmterr": "*",
-    "ocaml": "~4.7.0"
+    "ocaml": "^4.7.0"
   },
   "devDependencies": {
     "@opam/merlin": "*",
-    "ocaml": "~4.7.0"
+    "ocaml": "^4.7.0"
   }
 }

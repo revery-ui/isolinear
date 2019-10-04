@@ -7,7 +7,7 @@ type testActions =
 
 describe("Isolinear", ({describe, _}) =>
   describe("subscribe", ({test, _}) =>
-    test("state subscription fires on dispatch", ({expect}) => {
+    test("state subscription fires on dispatch", ({expect, _}) => {
       let updater = (s, a) =>
         switch (a) {
         | Change(v) => (s ++ v, Effect.none)

@@ -3,7 +3,7 @@ type sendFunc('a) = 'a => unit;
 
 type streamFunc('a) = sendFunc('a) => unit;
 
-type unsubscribeFunc = unit => unit
+type unsubscribeFunc = unit => unit;
 
 type subscriber('a) = {
   id: int,
@@ -53,7 +53,7 @@ let subscribe = (v: t('a), f: sendFunc('a)) => {
   let unsubscribe = () =>
     v.subscribers := List.filter(sub => sub.id != id, v.subscribers^);
 
-  unsubscribe
+  unsubscribe;
 };
 
 // TODO: This should be called `filterMap`
@@ -64,7 +64,8 @@ let map = (v: t('a), f: 'a => option('b)) => {
       | None => ()
       | Some(v) => send(v)
       }
-    ) |> (ignore: unsubscribeFunc => unit)
+    )
+    |> (ignore: unsubscribeFunc => unit)
   );
 };
 

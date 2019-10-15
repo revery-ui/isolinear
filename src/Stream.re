@@ -3,6 +3,8 @@ type sendFunc('a) = 'a => unit;
 
 type streamFunc('a) = sendFunc('a) => unit;
 
+type unsubscribeFunc = unit => unit
+
 type subscriber('a) = {
   id: int,
   onValue: sendFunc('a),
@@ -42,14 +44,19 @@ let create = () => {
 };
 
 let subscribe = (v: t('a), f: sendFunc('a)) => {
-  let newId = v.lastSubscriberId^ + 1;
-  v.lastSubscriberId := newId;
+  let id = v.lastSubscriberId^ + 1;
+  v.lastSubscriberId := id;
 
-  let subscriber = {id: newId, onValue: f};
-
+  let subscriber = {id, onValue: f};
   v.subscribers := [subscriber, ...v.subscribers^];
+
+  let unsubscribe = () =>
+    v.subscribers := List.filter(sub => sub.id != id, v.subscribers^);
+
+  unsubscribe
 };
 
+// TODO: This should be called `filterMap`
 let map = (v: t('a), f: 'a => option('b)) => {
   ofDispatch(send =>
     subscribe(v, x =>
@@ -57,7 +64,7 @@ let map = (v: t('a), f: 'a => option('b)) => {
       | None => ()
       | Some(v) => send(v)
       }
-    )
+    ) |> (ignore: unsubscribeFunc => unit)
   );
 };
 

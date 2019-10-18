@@ -1,29 +1,57 @@
 type dispatchFunction('a) = 'a => unit;
 
-type t('a) = {
-  name: string,
+type effect('a) = {
+  getName: (int) => string,
   f: dispatchFunction('a) => unit,
 };
 
-let create = (~name: string, f: unit => unit) => {name, f: _ => f()};
+type t('a) = option(effect('a));
 
-let createWithDispatch = (~name: string, f: dispatchFunction('a) => unit) => {
-  name,
-  f,
+let _namePrinter = (name) => (indentLevel) => {
+  String.make(indentLevel, ' ') ++ name;
 };
 
-let none: t('a) = {name: "None", f: _ => ()};
+let create = (~name: string, f: unit => unit) => Some({getName: _namePrinter(name), f: _ => f()});
+
+let createWithDispatch = (~name: string, f: dispatchFunction('a) => unit) => Some({
+  getName: _namePrinter(name),
+  f,
+});
+
+let none: t('a) = None;
 
 let run = (effect: t('a), dispatch: dispatchFunction('a)) => {
-  effect.f(dispatch);
+  switch (effect) {
+  | None => ()
+  | Some(effect) => effect.f(dispatch);
+  }
 };
 
 let batch = (effects: list(t('a))) => {
+  let effects = effects
+    |> List.filter(e => e != None);
+
   let execute = dispatch => {
     List.iter(e => run(e, dispatch), effects);
   };
 
-  {name: "batched effects", f: execute};
+  let getName = (indentLevel) => {
+     let start = String.make(indentLevel, ' ') ++ "Batch" ++ ":";
+
+     start ++ List.fold_left((prev, curr) => {
+        switch (curr) {
+        | None => prev
+        | Some(curr) =>
+          let newName = curr.getName(indentLevel + 1) ++ "\n";
+          prev ++ newName;
+        };
+     }, "\n", effects);
+  };
+
+  switch (effects) {
+  | [] => None
+  | v => Some({getName, f: execute });
+  }
 };
 
 /* let batch: (~name: string, List(t)) => Effect.t; */

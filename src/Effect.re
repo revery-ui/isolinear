@@ -63,5 +63,11 @@ let batch = (effects: list(t('a))) => {
   };
 };
 
+let map = f =>
+  fun
+  | Some(effect) =>
+    Some({...effect, f: dispatch => effect.f(a => dispatch(f(a)))})
+  | None => None;
+
 /* let batch: (~name: string, List(t)) => Effect.t; */
 /* let create: (~name: string, ~f:effectFunction, ()) => Effect.t; */

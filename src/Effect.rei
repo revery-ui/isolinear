@@ -14,3 +14,5 @@ let none: t('a);
 let run: (t('a), dispatchFunction('a)) => unit;
 
 let batch: list(t('a)) => t('a);
+
+let map: ('a => 'b, t('a)) => t('b);

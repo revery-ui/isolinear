@@ -113,8 +113,7 @@ module Make = (RunnerConfig: {type msg;}) => {
       init(sub, dispatch);
     } else {
       // Otherwise, update the current one
-      //update(oldSubscription, newSubscription)
-      sub;
+      update(state, sub, dispatch);
     };
   };
 };

@@ -31,7 +31,9 @@ type subscription('params, 'msg, 'state) = {
 
 type t('msg) =
   | NoSubscription: t('msg)
-  | Subscription(subscription('params, 'msg, 'state)): t('msg);
+  | Subscription(subscription('params, 'msg, 'state)): t('msg)
+  // TODO:
+  //| SubscriptionBatch(list(t('msg)));
 
 module Make = (ConfigInfo: Config) => {
   type params = ConfigInfo.params;
@@ -50,3 +52,6 @@ module Make = (ConfigInfo: Config) => {
 };
 
 let none = NoSubscription;
+
+// TODO:
+//let batch = (subs) => SubscriptionBatch(subs);

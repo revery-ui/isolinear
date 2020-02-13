@@ -1,17 +1,31 @@
-type t('msg, 'model);
+module type Store = {
+  type msg;
+  type model;
 
-type unsubscribe = unit => unit;
+  let updater: Updater.t(msg, model);
+  let subscriptions: model => Sub.t(msg);
 
-let create:
-  //~subscriptions: 'model => Sub.t('msg) =?,
-  (~updater: Updater.t('msg, 'model), 'model) => t('msg, 'model);
+  type unsubscribe = unit => unit;
 
-let getModel: t('msg, 'model) => 'model;
+  let getModel: unit => model;
+  let dispatch: msg => unit;
 
-let dispatch: (t('msg, 'model), 'msg) => unit;
+  let onModelChanged: (model => unit) => unsubscribe;
+  let onPendingEffect: (unit => unit) => unsubscribe;
 
-let onModelChanged: (t('msg, 'model), 'model => unit) => unsubscribe;
-let onPendingEffect: (t('msg, 'model), unit => unit) => unsubscribe;
+  let hasPendingEffects: unit => bool;
+  let runPendingEffects: unit => unit;
+};
 
-let hasPendingEffects: t('msg, 'model) => bool;
-let runPendingEffects: t('msg, 'model) => unit;
+module Make:
+  (
+     {
+      type msg;
+      type model;
+
+      let initial: model;
+      let updater: Updater.t(msg, model);
+      let subscriptions: model => Sub.t(msg);
+    },
+  ) =>
+   Store;

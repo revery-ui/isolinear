@@ -1,12 +1,12 @@
-open Sub_Internal;
+open Sub;
 
 module Make = (RunnerConfig: {type msg;}) => {
   //type t('msg) = subscription('msg);
 
   type msg = RunnerConfig.msg;
-  type t = Sub_Internal.t(RunnerConfig.msg);
+  type t = Sub.t(RunnerConfig.msg);
 
-  //let empty = NoSubscription;
+  let empty = NoSubscription;
 
   let getSubscriptionName = (subscription: t) => {
     switch (subscription) {

@@ -1,27 +1,57 @@
-type t('msg, 'model) = {
-  modelChangedDispatch: 'model => unit,
-  modelChangedStream: Stream.t('model),
-  pendingEffectStream: Stream.t(unit),
-  pendingEffectDispatch: unit => unit,
-  latestModel: ref('model),
-  pendingEffects: ref(list(Effect.t('msg))),
-  updater: Updater.t('msg, 'model),
-  //subscriptions: ('model) => Sub.t('msg),
+module type Store = {
+  type msg;
+  type model;
+
+  let updater: Updater.t(msg, model);
+  let subscriptions: model => Sub.t(msg);
+
+  type unsubscribe = unit => unit;
+
+  let getModel: unit => model;
+  let dispatch: msg => unit;
+
+  let onModelChanged: (model => unit) => unsubscribe;
+  let onPendingEffect: (unit => unit) => unsubscribe;
+
+  let hasPendingEffects: unit => bool;
+  let runPendingEffects: unit => unit;
 };
 
-type unsubscribe = unit => unit;
+module Make =
+       (
+         Config: {
+           type msg;
+           type model;
 
-let create =
-    //~subscriptions=(_) => Sub.none,
-    (~updater, model) => {
-  let latestModel = ref(model);
+           let initial: model;
+           let updater: Updater.t(msg, model);
+           let subscriptions: model => Sub.t(msg);
+         },
+       ) => {
+  type msg = Config.msg;
+  type model = Config.model;
+
+  let updater = Config.updater;
+  let subscriptions = Config.subscriptions;
+
+  type t = {
+    modelChangedDispatch: model => unit,
+    modelChangedStream: Stream.t(model),
+    pendingEffectStream: Stream.t(unit),
+    pendingEffectDispatch: unit => unit,
+    latestModel: ref(model),
+    pendingEffects: ref(list(Effect.t(msg))),
+    updater: Updater.t(msg, model),
+    //subscriptions: ('model) => Sub.t('msg),
+  };
+
+  let latestModel = ref(Config.initial);
   let pendingEffects = ref([]);
-
   let (modelChangedStream, modelChangedDispatch) = Stream.create();
   let (pendingEffectStream, pendingEffectDispatch) = Stream.create();
 
-  {
-    /*subscriptions,*/ modelChangedStream,
+  let store: t = {
+    modelChangedStream,
     pendingEffectStream,
     modelChangedDispatch,
     pendingEffectDispatch,
@@ -29,48 +59,50 @@ let create =
     pendingEffects,
     updater,
   };
-};
 
-let getModel = ({latestModel, _}) => latestModel^;
+  type unsubscribe = unit => unit;
 
-let dispatch = (store: t('msg, 'model), msg: 'msg) => {
-  let currentModel = store.latestModel^;
-  let (newModel, effect) = store.updater(currentModel, msg);
-  let hasPendingEffect = ref(false);
+  let getModel = () => store.latestModel^;
 
-  if (effect != Effect.none) {
-    store.pendingEffects := [effect, ...store.pendingEffects^];
-    hasPendingEffect := true;
+  let dispatch = (msg: msg) => {
+    let currentModel = store.latestModel^;
+    let (newModel, effect) = store.updater(currentModel, msg);
+    let hasPendingEffect = ref(false);
+
+    if (effect != Effect.none) {
+      store.pendingEffects := [effect, ...store.pendingEffects^];
+      hasPendingEffect := true;
+    };
+
+    store.latestModel := newModel;
+
+    // Dispatch model changed event, if necessary
+    if (currentModel !== newModel) {
+      store.modelChangedDispatch(newModel);
+    };
+
+    if (hasPendingEffect^) {
+      store.pendingEffectDispatch();
+    };
   };
 
-  store.latestModel := newModel;
+  let hasPendingEffects = () => store.pendingEffects^ != [];
 
-  // Dispatch model changed event, if necessary
-  if (currentModel !== newModel) {
-    store.modelChangedDispatch(newModel);
+  let runPendingEffects = () => {
+    let effects = store.pendingEffects^;
+    store.pendingEffects := [];
+
+    effects
+    |> List.filter(e => e != Effect.none)
+    |> List.rev
+    |> List.iter(e => Effect.run(e, dispatch));
   };
 
-  if (hasPendingEffect^) {
-    store.pendingEffectDispatch();
+  let onModelChanged = subscription => {
+    Stream.subscribe(store.modelChangedStream, subscription);
   };
-};
 
-let hasPendingEffects = ({pendingEffects, _}) => pendingEffects^ != [];
-
-let runPendingEffects = store => {
-  let effects = store.pendingEffects^;
-  store.pendingEffects := [];
-
-  effects
-  |> List.filter(e => e != Effect.none)
-  |> List.rev
-  |> List.iter(e => Effect.run(e, dispatch(store)));
-};
-
-let onModelChanged = (store, subscription) => {
-  Stream.subscribe(store.modelChangedStream, subscription);
-};
-
-let onPendingEffect = (store, subscription) => {
-  Stream.subscribe(store.pendingEffectStream, subscription);
+  let onPendingEffect = subscription => {
+    Stream.subscribe(store.pendingEffectStream, subscription);
+  };
 };

@@ -45,6 +45,11 @@ module Make =
     //subscriptions: ('model) => Sub.t('msg),
   };
 
+  module Runner = SubscriptionRunner.Make({
+    type msg = Config.msg;
+  });
+  let subscriptionState = ref(Runner.empty);
+
   let latestModel = ref(Config.initial);
   let pendingEffects = ref([]);
   let (modelChangedStream, modelChangedDispatch) = Stream.create();
@@ -64,7 +69,7 @@ module Make =
 
   let getModel = () => store.latestModel^;
 
-  let dispatch = (msg: msg) => {
+  let rec dispatch = (msg: msg) => {
     let currentModel = store.latestModel^;
     let (newModel, effect) = store.updater(currentModel, msg);
     let hasPendingEffect = ref(false);
@@ -84,6 +89,10 @@ module Make =
     if (hasPendingEffect^) {
       store.pendingEffectDispatch();
     };
+
+    // Run subscriptions
+    let sub = subscriptions(newModel);
+    subscriptionState := Runner.run(~dispatch, ~sub, subscriptionState^);
   };
 
   let hasPendingEffects = () => store.pendingEffects^ != [];

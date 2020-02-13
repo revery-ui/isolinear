@@ -19,7 +19,7 @@ module type Store = {
 
 module Make:
   (
-     {
+    Config: {
       type msg;
       type model;
 
@@ -28,4 +28,4 @@ module Make:
       let subscriptions: model => Sub.t(msg);
     },
   ) =>
-   Store;
+   Store with type msg = Config.msg and type model = Config.model;

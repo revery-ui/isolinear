@@ -32,8 +32,24 @@ type subscription('params, 'msg, 'state) = {
 type t('msg) =
   | NoSubscription: t('msg)
   | Subscription(subscription('params, 'msg, 'state)): t('msg)
-  // TODO:
-  //| SubscriptionBatch(list(t('msg)));
+  | SubscriptionBatch(list(t('msg)));
+
+let batch = (subs) => SubscriptionBatch(subs);
+
+let flatten = (sub) => {
+  let rec loop = (sub) => {
+    switch (sub) {
+    | NoSubscription => []
+    | Subscription(_) as sub => [sub]
+    | SubscriptionBatch(subs) => 
+      subs
+      |> List.map(loop)
+      |> List.flatten;
+    }
+  };
+
+  loop(sub);
+}
 
 module Make = (ConfigInfo: Config) => {
   type params = ConfigInfo.params;

@@ -48,6 +48,13 @@ let flatten = sub => {
   loop(sub);
 };
 
+module type Sub = {
+  type params;
+  type msg;
+
+  let create: params => t(msg);
+};
+
 module Make = (ConfigInfo: Config) => {
   type params = ConfigInfo.params;
   type msg = ConfigInfo.msg;

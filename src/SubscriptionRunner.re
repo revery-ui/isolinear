@@ -6,7 +6,8 @@ module Make = (RunnerConfig: {type msg;}) => {
   type msg = RunnerConfig.msg;
   type t = Hashtbl.t(string, Sub_Internal.t(RunnerConfig.msg));
 
-  let empty: Hashtbl.t(string, Sub_Internal.t(RunnerConfig.msg)) = Hashtbl.create(0);
+  let empty: Hashtbl.t(string, Sub_Internal.t(RunnerConfig.msg)) =
+    Hashtbl.create(0);
 
   let getSubscriptionName = (subscription: Sub_Internal.t(msg)) => {
     switch (subscription) {

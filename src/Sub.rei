@@ -26,6 +26,8 @@ module type Sub = {
   let create: params => t(msg);
 };
 
-module Make: (ConfigInfo: Config) => Sub with type msg = ConfigInfo.msg and type params = ConfigInfo.params;
+module Make:
+  (ConfigInfo: Config) =>
+   Sub with type msg = ConfigInfo.msg and type params = ConfigInfo.params;
 
 let none: t('msg);

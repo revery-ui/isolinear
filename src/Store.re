@@ -21,9 +21,7 @@ module type Store = {
   let hasPendingEffects: unit => bool;
   let runPendingEffects: unit => unit;
 
-  module Deprecated {
-    let getStoreStream: unit => Stream.t((model, msg));
-  }
+  module Deprecated: {let getStoreStream: unit => Stream.t((model, msg));};
 };
 
 module Make =
@@ -59,7 +57,6 @@ module Make =
     latestModel: ref(model),
     pendingEffects: ref(list(Effect.t(msg))),
     updater: Updater.t(msg, model),
-
     // Legacy store stream for compatibility with old API
     legacyStoreDispatch: ((model, msg)) => unit,
     legacyStoreStream: Stream.t((model, msg)),
@@ -77,7 +74,8 @@ module Make =
   let (pendingEffectStream, pendingEffectDispatch) = Stream.create();
   let (legacyStoreStream, legacyStoreDispatch) = Stream.create();
   let (beforeMsgStream, beforeMsgDispatch) = Stream.create();
-  let (afterMsgStream: Stream.t((msg, model)), afterMsgDispatch) = Stream.create();
+  let (afterMsgStream: Stream.t((msg, model)), afterMsgDispatch) =
+    Stream.create();
   let (beforeEffectStream, beforeEffectDispatch) = Stream.create();
   let (afterEffectStream, afterEffectDispatch) = Stream.create();
 
@@ -147,20 +145,18 @@ module Make =
     // since we wouldn't have recorded the new state, yet!
     let subscriptionActions: ref(list(msg)) = ref([]);
     let subscriptionLock = ref(true);
-    let subscriptionDispatch = (msg) => {
+    let subscriptionDispatch = msg =>
       if (subscriptionLock^) {
-        subscriptionActions := [msg, ...subscriptionActions^]; 
+        subscriptionActions := [msg, ...subscriptionActions^];
       } else {
         dispatch(msg);
-      }
-    }
-    subscriptionState := Runner.run(~dispatch=subscriptionDispatch, ~sub, subscriptionState^);
-    
-    subscriptionActions^
-    |> List.rev
-    |> List.iter(dispatch);
+      };
+    subscriptionState :=
+      Runner.run(~dispatch=subscriptionDispatch, ~sub, subscriptionState^);
+
+    subscriptionActions^ |> List.rev |> List.iter(dispatch);
     subscriptionLock := false;
-    
+
     store.afterMsgDispatch((msg, store.latestModel^));
   };
 
@@ -174,16 +170,17 @@ module Make =
     |> List.filter(e => e != Effect.none)
     |> List.rev
     |> List.iter(e => {
-       store.beforeEffectDispatch(e);
-       Effect.run(e, dispatch);
-       store.afterEffectDispatch(e);
+         store.beforeEffectDispatch(e);
+         Effect.run(e, dispatch);
+         store.afterEffectDispatch(e);
        });
   };
 
   let onBeforeMsg = Stream.subscribe(store.beforeMsgStream);
-  let onAfterMsg = subscription => Stream.subscribe(store.afterMsgStream, ((model, msg)) => {
-    subscription(model, msg); 
-  });
+  let onAfterMsg = subscription =>
+    Stream.subscribe(store.afterMsgStream, ((model, msg)) => {
+      subscription(model, msg)
+    });
 
   let onBeforeEffectRan = Stream.subscribe(store.beforeEffectStream);
   let onAfterEffectRan = Stream.subscribe(store.afterEffectStream);
@@ -199,6 +196,6 @@ module Make =
   module Deprecated = {
     let getStoreStream = () => {
       store.legacyStoreStream;
-    }
+    };
   };
 };

@@ -13,7 +13,7 @@ module type Store = {
   let onBeforeMsg: (msg => unit) => unsubscribe;
   let onModelChanged: (model => unit) => unsubscribe;
   let onAfterMsg: ((msg, model) => unit) => unsubscribe;
-  
+
   let onBeforeEffectRan: (Effect.t(msg) => unit) => unsubscribe;
   let onPendingEffect: (unit => unit) => unsubscribe;
   let onAfterEffectRan: (Effect.t(msg) => unit) => unsubscribe;
@@ -21,9 +21,7 @@ module type Store = {
   let hasPendingEffects: unit => bool;
   let runPendingEffects: unit => unit;
 
-  module Deprecated {
-    let getStoreStream: unit => Stream.t((model, msg));
-  }
+  module Deprecated: {let getStoreStream: unit => Stream.t((model, msg));};
 };
 
 module Make:

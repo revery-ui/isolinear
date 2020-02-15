@@ -141,7 +141,25 @@ module Make =
 
     // Run subscriptions
     let sub = subscriptions(newModel);
-    subscriptionState := Runner.run(~dispatch, ~sub, subscriptionState^);
+
+    // Defer running dispatches from subscription until after the subscription state is updated
+    // Otherwise, in the case where [init] dispatches an action, we could keep calling [init]
+    // since we wouldn't have recorded the new state, yet!
+    let subscriptionActions: ref(list(msg)) = ref([]);
+    let subscriptionLock = ref(true);
+    let subscriptionDispatch = (msg) => {
+      if (subscriptionLock^) {
+        subscriptionActions := [msg, ...subscriptionActions^]; 
+      } else {
+        dispatch(msg);
+      }
+    }
+    subscriptionState := Runner.run(~dispatch=subscriptionDispatch, ~sub, subscriptionState^);
+    
+    subscriptionActions^
+    |> List.rev
+    |> List.iter(dispatch);
+    subscriptionLock := false;
     
     store.afterMsgDispatch((msg, store.latestModel^));
   };

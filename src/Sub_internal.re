@@ -9,7 +9,7 @@ module type Config = {
 
   let getUniqueId: params => string;
 
-  let start: (~params: params, ~dispatch: msg => unit) => state;
+  let init: (~params: params, ~dispatch: msg => unit) => state;
   let update:
     (~params: params, ~state: state, ~dispatch: msg => unit) => state;
   let dispose: (~params: params, ~state: state) => unit;

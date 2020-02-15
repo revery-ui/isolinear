@@ -27,7 +27,7 @@ module TestSubscription =
 
     let getUniqueId = params => params |> string_of_int;
 
-    let start = (~params, ~dispatch) => {
+    let init = (~params, ~dispatch) => {
       dispatch(Init(params));
       [Init(params)];
     };

@@ -42,7 +42,7 @@ module Make = (RunnerConfig: {type msg;}) => {
         state,
         handedOffInstance,
       }) =>
-      let state = Config.start(~params, ~dispatch);
+      let state = Config.init(~params, ~dispatch);
 
       Subscription({
         config: (module Config),

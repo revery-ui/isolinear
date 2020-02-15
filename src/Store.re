@@ -10,11 +10,20 @@ module type Store = {
   let getModel: unit => model;
   let dispatch: msg => unit;
 
+  let onBeforeMsg: (msg => unit) => unsubscribe;
   let onModelChanged: (model => unit) => unsubscribe;
+  let onAfterMsg: ((msg, model) => unit) => unsubscribe;
+
+  let onBeforeEffectRan: (Effect.t(msg) => unit) => unsubscribe;
   let onPendingEffect: (unit => unit) => unsubscribe;
+  let onAfterEffectRan: (Effect.t(msg) => unit) => unsubscribe;
 
   let hasPendingEffects: unit => bool;
   let runPendingEffects: unit => unit;
+
+  module Deprecated {
+    let getStoreStream: unit => Stream.t((model, msg));
+  }
 };
 
 module Make =
@@ -35,6 +44,14 @@ module Make =
   let subscriptions = Config.subscriptions;
 
   type t = {
+    beforeMsgDispatch: msg => unit,
+    beforeMsgStream: Stream.t(msg),
+    afterMsgDispatch: ((msg, model)) => unit,
+    afterMsgStream: Stream.t((msg, model)),
+    beforeEffectDispatch: Effect.t(msg) => unit,
+    beforeEffectStream: Stream.t(Effect.t(msg)),
+    afterEffectDispatch: Effect.t(msg) => unit,
+    afterEffectStream: Stream.t(Effect.t(msg)),
     modelChangedDispatch: model => unit,
     modelChangedStream: Stream.t(model),
     pendingEffectStream: Stream.t(unit),
@@ -42,7 +59,10 @@ module Make =
     latestModel: ref(model),
     pendingEffects: ref(list(Effect.t(msg))),
     updater: Updater.t(msg, model),
-    //subscriptions: ('model) => Sub.t('msg),
+
+    // Legacy store stream for compatibility with old API
+    legacyStoreDispatch: ((model, msg)) => unit,
+    legacyStoreStream: Stream.t((model, msg)),
   };
 
   module Runner =
@@ -55,8 +75,21 @@ module Make =
   let pendingEffects = ref([]);
   let (modelChangedStream, modelChangedDispatch) = Stream.create();
   let (pendingEffectStream, pendingEffectDispatch) = Stream.create();
+  let (legacyStoreStream, legacyStoreDispatch) = Stream.create();
+  let (beforeMsgStream, beforeMsgDispatch) = Stream.create();
+  let (afterMsgStream: Stream.t((msg, model)), afterMsgDispatch) = Stream.create();
+  let (beforeEffectStream, beforeEffectDispatch) = Stream.create();
+  let (afterEffectStream, afterEffectDispatch) = Stream.create();
 
   let store: t = {
+    beforeMsgDispatch,
+    beforeMsgStream,
+    afterMsgDispatch,
+    afterMsgStream,
+    beforeEffectDispatch,
+    beforeEffectStream,
+    afterEffectDispatch,
+    afterEffectStream,
     modelChangedStream,
     pendingEffectStream,
     modelChangedDispatch,
@@ -64,6 +97,8 @@ module Make =
     latestModel,
     pendingEffects,
     updater,
+    legacyStoreDispatch,
+    legacyStoreStream,
   };
 
   type unsubscribe = unit => unit;
@@ -71,6 +106,11 @@ module Make =
   let getModel = () => store.latestModel^;
 
   let rec dispatch = (msg: msg) => {
+    store.beforeMsgDispatch(msg);
+
+    // BEGIN ATOMIC
+    // This should be atomic, so that nested calls to [dispatch]
+    // keep our store in an internally consistent state
     let currentModel = store.latestModel^;
     let (newModel, effect) = store.updater(currentModel, msg);
     let hasPendingEffect = ref(false);
@@ -81,6 +121,12 @@ module Make =
     };
 
     store.latestModel := newModel;
+    // END ATOMIC
+
+    store.legacyStoreDispatch((newModel, msg));
+
+    // In case the store was updated between states...
+    let newModel = store.latestModel^;
 
     // Dispatch model changed event, if necessary
     if (currentModel !== newModel) {
@@ -91,9 +137,13 @@ module Make =
       store.pendingEffectDispatch();
     };
 
+    let newModel = store.latestModel^;
+
     // Run subscriptions
     let sub = subscriptions(newModel);
     subscriptionState := Runner.run(~dispatch, ~sub, subscriptionState^);
+    
+    store.afterMsgDispatch((msg, store.latestModel^));
   };
 
   let hasPendingEffects = () => store.pendingEffects^ != [];
@@ -105,8 +155,20 @@ module Make =
     effects
     |> List.filter(e => e != Effect.none)
     |> List.rev
-    |> List.iter(e => Effect.run(e, dispatch));
+    |> List.iter(e => {
+       store.beforeEffectDispatch(e);
+       Effect.run(e, dispatch);
+       store.afterEffectDispatch(e);
+       });
   };
+
+  let onBeforeMsg = Stream.subscribe(store.beforeMsgStream);
+  let onAfterMsg = subscription => Stream.subscribe(store.afterMsgStream, ((model, msg)) => {
+    subscription(model, msg); 
+  });
+
+  let onBeforeEffectRan = Stream.subscribe(store.beforeEffectStream);
+  let onAfterEffectRan = Stream.subscribe(store.afterEffectStream);
 
   let onModelChanged = subscription => {
     Stream.subscribe(store.modelChangedStream, subscription);
@@ -114,5 +176,11 @@ module Make =
 
   let onPendingEffect = subscription => {
     Stream.subscribe(store.pendingEffectStream, subscription);
+  };
+
+  module Deprecated = {
+    let getStoreStream = () => {
+      store.legacyStoreStream;
+    }
   };
 };

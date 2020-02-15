@@ -18,7 +18,7 @@ module TestSubscription =
     let subscriptionName = "testSubscription";
     let getUniqueId = _ => "unique";
 
-    let start = (~params as _, ~dispatch as _) => {
+    let init = (~params as _, ~dispatch as _) => {
       incr(startCount);
       ();
     };

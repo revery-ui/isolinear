@@ -45,9 +45,10 @@ module Make =
     //subscriptions: ('model) => Sub.t('msg),
   };
 
-  module Runner = SubscriptionRunner.Make({
-    type msg = Config.msg;
-  });
+  module Runner =
+    SubscriptionRunner.Make({
+      type msg = Config.msg;
+    });
   let subscriptionState = ref(Runner.empty);
 
   let latestModel = ref(Config.initial);

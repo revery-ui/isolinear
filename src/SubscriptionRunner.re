@@ -28,7 +28,7 @@ module Make = (RunnerConfig: {type msg;}) => {
       }
     // This should never be hit, because the batches are removed
     // prior to reconciliation
-    | SubscriptionBatch(_) => ();
+    | SubscriptionBatch(_) => ()
     };
   };
 
@@ -108,25 +108,25 @@ module Make = (RunnerConfig: {type msg;}) => {
       ret;
     // Subscription batch case - should not be hit
     | _ => NoSubscription
-    }
+    };
   };
 
   let reconcile = (subs, oldState, dispatch) => {
-  
     let newState = Hashtbl.create(Hashtbl.length(oldState));
     let iter = (sub: Sub.t(msg)) => {
-       let subscriptionName = getSubscriptionName(sub);
+      let subscriptionName = getSubscriptionName(sub);
 
-       // Is this a new subscription, or a previous one?
-       let newSubState = switch (Hashtbl.find_opt(oldState, subscriptionName)) {
-       // New subscription - we'll init it
-       | None => init(sub, dispatch)
+      // Is this a new subscription, or a previous one?
+      let newSubState =
+        switch (Hashtbl.find_opt(oldState, subscriptionName)) {
+        // New subscription - we'll init it
+        | None => init(sub, dispatch)
 
-       // Existing subscription - we'll update it
-       | Some(previousSub) => update(previousSub, sub, dispatch)
-       }
+        // Existing subscription - we'll update it
+        | Some(previousSub) => update(previousSub, sub, dispatch)
+        };
 
-       Hashtbl.replace(newState, subscriptionName, newSubState);
+      Hashtbl.replace(newState, subscriptionName, newSubState);
     };
 
     List.iter(iter, subs);
@@ -135,28 +135,25 @@ module Make = (RunnerConfig: {type msg;}) => {
   };
 
   let run = (~dispatch: msg => unit, ~sub: Sub.t(msg), state: t) => {
-
     let subs = Sub.flatten(sub);
     let newState = reconcile(subs, state, dispatch);
-    
+
     // Diff the old state, and the new state, and see which subs
     // were removed
-    Hashtbl.iter((key, v) => {
-    
-      switch (Hashtbl.find_opt(newState, key)) {
+    Hashtbl.iter(
+      (key, v) => {
+        switch (Hashtbl.find_opt(newState, key)) {
+        // The subscription is still around, so nothing to do.
+        | Some(_) => ()
 
-      // The subscription is still around, so nothing to do.
-      | Some(_) => ()
-      
-      // The subscription was removed from the old state,
-      // so we need to dispose of it
-      | None =>
-      dispose(v);
-      }
-  
-    }, state);
+        // The subscription was removed from the old state,
+        // so we need to dispose of it
+        | None => dispose(v)
+        }
+      },
+      state,
+    );
 
     newState;
-
   };
 };

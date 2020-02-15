@@ -43,7 +43,7 @@ module TestSubscription =
     };
   });
 
-describe("SubscriptionRunner", ({describe, _}) =>
+describe("SubscriptionRunner", ({describe, _}) => {
   describe("subscribe", ({test, _}) => {
     test("init is called", ({expect, _}) => {
       let lastAction: ref(option(testState)) = ref(None);
@@ -67,5 +67,39 @@ describe("SubscriptionRunner", ({describe, _}) =>
 
       expect.equal(lastAction^, Some(Update(1)));
     });
-  })
-);
+  });
+
+  describe("batched subscriptions", ({test, _}) => {
+    test("init called for both", ({expect, _}) => {
+      let allActions: ref(list(testState)) = ref([]);
+      let dispatch = action => {
+        allActions := [action, ...allActions^];
+      };
+      let sub1 = TestSubscription.create(1);
+      let sub2 = TestSubscription.create(2);
+
+      let subs = Sub.batch([sub1, sub2]);
+      let state = Runner.run(~dispatch, ~sub=subs, Runner.empty);
+
+      expect.equal(allActions^ |> List.rev, [Init(1), Init(2)]);
+
+      // Remove one action
+      let subs = Sub.batch([sub2]);
+      let state = Runner.run(~dispatch, ~sub=subs, state);
+
+      expect.equal(
+        allActions^ |> List.rev,
+        [Init(1), Init(2), Update(2)],
+      );
+
+      // Bring back action
+      let subs = Sub.batch([sub1, sub2]);
+      let _state = Runner.run(~dispatch, ~sub=subs, state);
+
+      expect.equal(
+        allActions^ |> List.rev,
+        [Init(1), Init(2), Update(2), Init(1), Update(2)],
+      );
+    })
+  });
+});

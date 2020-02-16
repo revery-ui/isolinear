@@ -15,7 +15,7 @@ module type Config = {
   let dispose: (~params: params, ~state: state) => unit;
 };
 
-type t('msg) = Sub_Internal.t('msg);
+type t('msg) = Sub_internal.t('msg);
 
 let batch: list(t('msg)) => t('msg);
 

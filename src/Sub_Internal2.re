@@ -20,10 +20,11 @@ type config('params, 'msg, 'state) = (module Config with
                                          type params = 'params and
                                          type state = 'state);
 
-type subscription('params, 'msg, 'state) = {
-  config: config('params, 'msg, 'state),
+type subscription('params, 'originalMsg, 'destMsg, 'state) = {
+  config: config('params, 'originalMsg, 'state),
   params: 'params,
   state: option('state),
+  mapper: 'originalMsg => 'destMsg,
   // This is the same trick used in ReactMini -
   // used to avoid Obj.magic when updating subscriptions.
   handedOffInstance: ref(option('state)),
@@ -31,7 +32,7 @@ type subscription('params, 'msg, 'state) = {
 
 type t('msg) =
   | NoSubscription: t('msg)
-  | Subscription(subscription('params, 'msg, 'state)): t('msg)
+  | Subscription(subscription('params, 'originalMsg, 'destMsg, 'state)): t('destMsg)
   | SubscriptionBatch(list(t('msg)));
 
 let batch = subs => SubscriptionBatch(subs);
@@ -61,11 +62,14 @@ module Make = (ConfigInfo: Config) => {
 
   let handedOffInstance = ref(None);
 
+  let mapper: msg => msg = a => a;
+
   let create = params => {
     Subscription({
       handedOffInstance,
       config: (module ConfigInfo),
       params,
+      mapper, 
       state: None,
     });
   };

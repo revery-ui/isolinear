@@ -12,7 +12,7 @@ module Make = (RunnerConfig: {type msg;}) => {
   let getSubscriptionName = (subscription: Sub_internal.t(msg)) => {
     switch (subscription) {
     | NoSubscription => "__isolinear__nosubscription__"
-    | Subscription({params, state, config: (module Config)}) =>
+    | Subscription({params, state, config: (module Config)}, _) =>
       Config.subscriptionName ++ "$" ++ Config.getUniqueId(params)
     | SubscriptionBatch(_) => "__isolinear__batch__"
     };
@@ -21,7 +21,7 @@ module Make = (RunnerConfig: {type msg;}) => {
   let dispose = (subscription: Sub_internal.t(msg)) => {
     switch (subscription) {
     | NoSubscription => ()
-    | Subscription({config: (module Config), params, state}) =>
+    | Subscription({config: (module Config), params, state}, _) =>
       switch (state) {
       // Config was never actually created, so no need to dispose
       | None => ()
@@ -36,20 +36,25 @@ module Make = (RunnerConfig: {type msg;}) => {
   let init = (subscription: Sub_internal.t(msg), dispatch: msg => unit) => {
     switch (subscription) {
     | NoSubscription => NoSubscription
-    | Subscription({
-        config: (module Config),
-        params,
-        state,
-        handedOffInstance,
-      }) =>
-      let state = Config.init(~params, ~dispatch);
+    | Subscription(
+        {config: (module Config), params, state, handedOffInstance},
+        mapper,
+      ) =>
+      let wrappedDispatch = action => {
+        dispatch(mapper(action));
+      };
 
-      Subscription({
-        config: (module Config),
-        params,
-        state: Some(state),
-        handedOffInstance,
-      });
+      let state = Config.init(~params, ~dispatch=wrappedDispatch);
+
+      Subscription(
+        {
+          config: (module Config),
+          params,
+          state: Some(state),
+          handedOffInstance,
+        },
+        mapper,
+      );
     // This should never be hit
     | SubscriptionBatch(_) => NoSubscription
     };
@@ -62,7 +67,7 @@ module Make = (RunnerConfig: {type msg;}) => {
     | (sub, NoSubscription) =>
       dispose(sub);
       NoSubscription;
-    | (Subscription(sub1), Subscription(sub2)) =>
+    | (Subscription(sub1, oldMapper), Subscription(sub2, newMapper)) =>
       let {
         config: (module ConfigOld),
         params as _oldParams,
@@ -89,18 +94,30 @@ module Make = (RunnerConfig: {type msg;}) => {
         | None =>
           // Somehow... the types are different. We'll dispose of the old one, and init the new one
           dispose(oldSubscription);
+
           init(newSubscription, dispatch);
         | Some(oldState) =>
           // These types do match! And we know about the old state
 
+          let wrappedDispatch = action => {
+            dispatch(newMapper(action));
+          };
+
           let newState =
-            ConfigNew.update(~params=newParams, ~state=oldState, ~dispatch);
-          Subscription({
-            config: (module ConfigNew),
-            params: newParams,
-            state: Some(newState),
-            handedOffInstance: newH,
-          });
+            ConfigNew.update(
+              ~params=newParams,
+              ~state=oldState,
+              ~dispatch=wrappedDispatch,
+            );
+          Subscription(
+            {
+              config: (module ConfigNew),
+              params: newParams,
+              state: Some(newState),
+              handedOffInstance: newH,
+            },
+            newMapper,
+          );
         };
 
       // We need to reset the old types now, though!

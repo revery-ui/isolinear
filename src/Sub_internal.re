@@ -31,7 +31,11 @@ type subscription('params, 'msg, 'state) = {
 
 type t('msg) =
   | NoSubscription: t('msg)
-  | Subscription(subscription('params, 'msg, 'state)): t('msg)
+  | Subscription(
+      subscription('params, 'originalMsg, 'state),
+      'originalMsg => 'msg,
+    )
+    : t('msg)
   | SubscriptionBatch(list(t('msg)));
 
 let batch = subs => SubscriptionBatch(subs);
@@ -48,6 +52,17 @@ let flatten = sub => {
   loop(sub);
 };
 
+let rec map: ('a => 'b, t('a)) => t('b) =
+  (f, sub) => {
+    switch (sub) {
+    | NoSubscription => NoSubscription
+    | Subscription(sub, orig) =>
+      let newMapFunction = x => f(orig(x));
+      Subscription(sub, newMapFunction);
+    | SubscriptionBatch(subs) => SubscriptionBatch(List.map(map(f), subs))
+    };
+  };
+
 module type Sub = {
   type params;
   type msg;
@@ -61,13 +76,13 @@ module Make = (ConfigInfo: Config) => {
 
   let handedOffInstance = ref(None);
 
+  let mapper = a => a;
+
   let create = params => {
-    Subscription({
-      handedOffInstance,
-      config: (module ConfigInfo),
-      params,
-      state: None,
-    });
+    Subscription(
+      {handedOffInstance, config: (module ConfigInfo), params, state: None},
+      mapper,
+    );
   };
 };
 

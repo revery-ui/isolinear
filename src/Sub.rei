@@ -19,6 +19,8 @@ type t('msg) = Sub_internal.t('msg);
 
 let batch: list(t('msg)) => t('msg);
 
+let map: ('a => 'b, t('a)) => t('b);
+
 module type Sub = {
   type params;
   type msg;

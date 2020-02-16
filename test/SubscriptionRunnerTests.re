@@ -9,11 +9,27 @@ type testState =
   | Update(int)
   | Dispose(int);
 
+type testState2 =
+  | Init2(int)
+  | Update2(int)
+  | Dispose2(int);
+
+let map =
+  fun
+  | Init(v) => Init2(v)
+  | Update(v) => Update2(v)
+  | Dispose(v) => Dispose2(v);
+
 let disposeState: ref(list(testState)) = ref([]);
 
 module Runner =
   SubscriptionRunner.Make({
     type msg = testState;
+  });
+
+module Runner2 =
+  SubscriptionRunner.Make({
+    type msg = testState2;
   });
 
 module TestSubscription =
@@ -100,6 +116,25 @@ describe("SubscriptionRunner", ({describe, _}) => {
         allActions^ |> List.rev,
         [Init(1), Init(2), Update(2), Init(1), Update(2)],
       );
+    })
+  });
+
+  describe("mapped subscriptions", ({test, _}) => {
+    test("init called for both", ({expect, _}) => {
+      let allActions: ref(list(testState2)) = ref([]);
+      let dispatch = action => {
+        allActions := [action, ...allActions^];
+      };
+      let sub1: Sub.t(testState2) =
+        TestSubscription.create(1) |> Sub.map(map);
+
+      let state = Runner2.run(~dispatch, ~sub=sub1, Runner2.empty);
+
+      expect.equal(allActions^ |> List.rev, [Init2(1)]);
+
+      let _state = Runner2.run(~dispatch, ~sub=sub1, state);
+
+      expect.equal(allActions^ |> List.rev, [Init2(1), Update2(1)]);
     })
   });
 });

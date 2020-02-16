@@ -31,7 +31,7 @@ type subscription('params, 'msg, 'state) = {
 
 type t('msg) =
   | NoSubscription: t('msg)
-  | Subscription(subscription('params, 'msg, 'state)): t('destMsg)
+  | Subscription(subscription('params, 'msg, 'state)): t('msg)
   | SubscriptionBatch(list(t('msg)));
 
 let batch = subs => SubscriptionBatch(subs);

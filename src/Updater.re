@@ -1,9 +1,9 @@
-type t('actions, 'state) =
-  ('state, 'actions) => ('state, Effect.t('actions));
+type t('msg, 'model) =
+  ('model, 'msg) => ('model, Effect.t('msg));
 
-type reducer('actions, 'state) = ('state, 'actions) => 'state;
+type reducer('msg, 'model) = ('model, 'msg) => 'model;
 
-let ofReducer = (v: reducer('actions, 'state), s, a) => {
+let ofReducer = (v: reducer('msg, 'model), s, a) => {
   (v(s, a), Effect.none);
 };
 

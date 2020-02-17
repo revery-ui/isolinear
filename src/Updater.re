@@ -1,5 +1,4 @@
-type t('msg, 'model) =
-  ('model, 'msg) => ('model, Effect.t('msg));
+type t('msg, 'model) = ('model, 'msg) => ('model, Effect.t('msg));
 
 type reducer('msg, 'model) = ('model, 'msg) => 'model;
 

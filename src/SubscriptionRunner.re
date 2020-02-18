@@ -1,15 +1,15 @@
-open Sub_internal;
+open Sub;
 
 module Make = (RunnerConfig: {type msg;}) => {
   //type t('msg) = subscription('msg);
 
   type msg = RunnerConfig.msg;
-  type t = Hashtbl.t(string, Sub_internal.t(RunnerConfig.msg));
+  type t = Hashtbl.t(string, Sub.t(RunnerConfig.msg));
 
-  let empty: Hashtbl.t(string, Sub_internal.t(RunnerConfig.msg)) =
+  let empty: Hashtbl.t(string, Sub.t(RunnerConfig.msg)) =
     Hashtbl.create(0);
 
-  let getSubscriptionName = (subscription: Sub_internal.t(msg)) => {
+  let getSubscriptionName = (subscription: Sub.t(msg)) => {
     switch (subscription) {
     | NoSubscription => "__isolinear__nosubscription__"
     | Subscription({params, state, config: (module Config)}, _) =>
@@ -18,7 +18,7 @@ module Make = (RunnerConfig: {type msg;}) => {
     };
   };
 
-  let dispose = (subscription: Sub_internal.t(msg)) => {
+  let dispose = (subscription: Sub.t(msg)) => {
     switch (subscription) {
     | NoSubscription => ()
     | Subscription({config: (module Config), params, state}, _) =>
@@ -33,7 +33,7 @@ module Make = (RunnerConfig: {type msg;}) => {
     };
   };
 
-  let init = (subscription: Sub_internal.t(msg), dispatch: msg => unit) => {
+  let init = (subscription: Sub.t(msg), dispatch: msg => unit) => {
     switch (subscription) {
     | NoSubscription => NoSubscription
     | Subscription(
@@ -131,7 +131,7 @@ module Make = (RunnerConfig: {type msg;}) => {
 
   let reconcile = (subs, oldState, dispatch) => {
     let newState = Hashtbl.create(Hashtbl.length(oldState));
-    let iter = (sub: Sub_internal.t(msg)) => {
+    let iter = (sub: Sub.t(msg)) => {
       let subscriptionName = getSubscriptionName(sub);
 
       // Is this a new subscription, or a previous one?
@@ -153,7 +153,7 @@ module Make = (RunnerConfig: {type msg;}) => {
   };
 
   let run = (~dispatch: msg => unit, ~sub: Sub.t(msg), state: t) => {
-    let subs = Sub_internal.flatten(sub);
+    let subs = Sub.flatten(sub);
     let newState = reconcile(subs, state, dispatch);
 
     // Diff the old state, and the new state, and see which subs

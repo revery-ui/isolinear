@@ -1,6 +1,8 @@
 open TestFramework;
 
-open Isolinear;
+module Store = Isolinear.Store;
+module Sub = Isolinear.Internal.Sub;
+module Effect = Isolinear.Effect;
 
 type testActions =
   | Change(string);

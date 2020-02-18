@@ -1,9 +1,11 @@
 module Effect = Effect;
 module Store = Store;
 module Stream = Stream;
-module Sub = Sub;
 module Updater = Updater;
 
+module Sub = Sub;
+
 module Internal = {
+  module Sub = Sub;
   module SubscriptionRunner = SubscriptionRunner;
 };

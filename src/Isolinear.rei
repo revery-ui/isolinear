@@ -78,17 +78,19 @@ module Store: {
         let subscriptions: model => Sub.t(msg);
       },
     ) =>
-    Store with type msg = Config.msg and type model = Config.model;
+     Store with type msg = Config.msg and type model = Config.model;
 };
 
 module Internal: {
   module SubscriptionRunner: {
-    module Make: (RunnerConfig: {type msg;}) => {
-      type t;
-      type msg = RunnerConfig.msg;
+    module Make:
+      (RunnerConfig: {type msg;}) =>
+       {
+        type t;
+        type msg = RunnerConfig.msg;
 
-      let empty: t;
-      let run: (~dispatch: msg => unit, ~sub: Sub.t(msg), t) => t;
-    };
+        let empty: t;
+        let run: (~dispatch: msg => unit, ~sub: Sub.t(msg), t) => t;
+      };
   };
 };

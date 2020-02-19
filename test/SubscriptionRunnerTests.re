@@ -1,6 +1,6 @@
 open TestFramework;
 
-module Sub = Isolinear.Internal.Sub;
+module Sub = Isolinear.Sub;
 module SubscriptionRunner = Isolinear.Internal.SubscriptionRunner;
 
 type testState =

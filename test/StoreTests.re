@@ -1,7 +1,7 @@
 open TestFramework;
 
 module Store = Isolinear.Store;
-module Sub = Isolinear.Internal.Sub;
+module Sub = Isolinear.Sub;
 module Effect = Isolinear.Effect;
 
 type testActions =

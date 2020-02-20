@@ -63,7 +63,7 @@ let rec map: ('a => 'b, t('a)) => t('b) =
     };
   };
 
-module type Sub = {
+module type S = {
   type params;
   type msg;
 

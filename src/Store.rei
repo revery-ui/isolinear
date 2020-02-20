@@ -1,6 +1,6 @@
 type unsubscribe = unit => unit;
 
-module type Store = {
+module type S = {
   type msg;
   type model;
 
@@ -35,4 +35,4 @@ module Make:
       let subscriptions: model => Sub.t(msg);
     },
   ) =>
-   Store with type msg = Config.msg and type model = Config.model;
+   S with type msg = Config.msg and type model = Config.model;

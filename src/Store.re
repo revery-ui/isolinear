@@ -1,6 +1,6 @@
 type unsubscribe = unit => unit;
 
-module type Store = {
+module type S = {
   type msg;
   type model;
 

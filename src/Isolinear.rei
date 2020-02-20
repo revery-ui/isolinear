@@ -38,7 +38,7 @@ module Sub: {
   let map: ('a => 'b, t('a)) => t('b);
   let none: t('msg);
 
-  module type Sub = {
+  module type S = {
     type params;
     type msg;
 
@@ -64,11 +64,11 @@ module Sub: {
 
   module Make:
     (ConfigInfo: Config) =>
-     Sub with type msg = ConfigInfo.msg and type params = ConfigInfo.params;
+     S with type msg = ConfigInfo.msg and type params = ConfigInfo.params;
 };
 
 module Store: {
-  module type Store = {
+  module type S = {
     type msg;
     type model;
 
@@ -103,7 +103,7 @@ module Store: {
         let subscriptions: model => Sub.t(msg);
       },
     ) =>
-     Store with type msg = Config.msg and type model = Config.model;
+     S with type msg = Config.msg and type model = Config.model;
 };
 
 module Internal: {

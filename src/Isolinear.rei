@@ -1,38 +1,50 @@
-module Stream: {
-  type sendFunc('a) = 'a => unit;
-  type streamFunc('a) = sendFunc('a) => unit;
-  type unsubscribeFunc = unit => unit;
-  type t('a);
+type dispatcher('msg) = 'msg => unit;
+type unsubscribe = unit => unit;
 
-  let ofDispatch: streamFunc('a) => t('a);
-  let create: unit => (t('a), 'a => unit);
-  let subscribe: (t('a), sendFunc('a)) => unsubscribeFunc;
+module Stream: {
+  type t('msg);
+
+  let ofDispatch: (dispatcher('msg) => unit) => t('msg);
+  let create: unit => (t('msg), dispatcher('msg));
+  let subscribe: (t('msg), dispatcher('msg)) => unsubscribe;
   let map: (t('a), 'a => option('b)) => t('b);
-  let connect: ('action => unit, t('action)) => unsubscribeFunc;
+  let connect: (dispatcher('msg), t('msg)) => unsubscribe;
 };
 
 module Effect: {
-  type dispatchFunction('a) = 'a => unit;
-  type t('a);
+  type t('msg);
 
   let create: (~name: string, unit => unit) => t('a);
   let createWithDispatch:
-    (~name: string, dispatchFunction('a) => unit) => t('a);
-  let getName: t('a) => string;
-  let none: t('a);
-  let run: (t('a), dispatchFunction('a)) => unit;
-  let batch: list(t('a)) => t('a);
+    (~name: string, dispatcher('msg) => unit) => t('msg);
+  let getName: t(_) => string;
+  let none: t(_);
+  let run: (t('msg), dispatcher('msg)) => unit;
+  let batch: list(t('msg)) => t('msg);
   let map: ('a => 'b, t('a)) => t('b);
 };
 
 module Updater: {
-  type t('msg, 'model) = ('model, 'msg) => ('model, Effect.t('msg));
+  type t('model, 'msg) = ('model, 'msg) => ('model, Effect.t('msg));
 
-  let ofReducer: (('model, 'msg) => 'model) => t('msg, 'model);
-  let combine: list(t('msg, 'model)) => t('msg, 'model);
+  let ofReducer: (('model, 'msg) => 'model) => t('model, 'msg);
+  let combine: list(t('model, 'msg)) => t('model, 'msg);
 };
 
 module Sub: {
+  type t('msg);
+
+  let batch: list(t('msg)) => t('msg);
+  let map: ('a => 'b, t('a)) => t('b);
+  let none: t('msg);
+
+  module type Sub = {
+    type params;
+    type msg;
+
+    let create: params => t(msg);
+  };
+
   module type Config = {
     type params;
     type msg;
@@ -50,24 +62,9 @@ module Sub: {
     let dispose: (~params: params, ~state: state) => unit;
   };
 
-  type t('msg);
-
-  let batch: list(t('msg)) => t('msg);
-
-  let map: ('a => 'b, t('a)) => t('b);
-
-  module type Sub = {
-    type params;
-    type msg;
-
-    let create: params => t(msg);
-  };
-
   module Make:
     (ConfigInfo: Config) =>
      Sub with type msg = ConfigInfo.msg and type params = ConfigInfo.params;
-
-  let none: t('msg);
 };
 
 module Store: {
@@ -75,10 +72,8 @@ module Store: {
     type msg;
     type model;
 
-    let updater: Updater.t(msg, model);
+    let updater: Updater.t(model, msg);
     let subscriptions: model => Sub.t(msg);
-
-    type unsubscribe = unit => unit;
 
     let getModel: unit => model;
     let dispatch: msg => unit;
@@ -104,7 +99,7 @@ module Store: {
         type model;
 
         let initial: model;
-        let updater: Updater.t(msg, model);
+        let updater: Updater.t(model, msg);
         let subscriptions: model => Sub.t(msg);
       },
     ) =>

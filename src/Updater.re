@@ -1,9 +1,7 @@
-type t('msg, 'model) = ('model, 'msg) => ('model, Effect.t('msg));
+type t('model, 'msg) = ('model, 'msg) => ('model, Effect.t('msg));
 
-type reducer('msg, 'model) = ('model, 'msg) => 'model;
-
-let ofReducer = (v: reducer('msg, 'model), s, a) => {
-  (v(s, a), Effect.none);
+let ofReducer = (reducer, model, msg) => {
+  (reducer(model, msg), Effect.none);
 };
 
 let combine = (updaters, state, action) => {

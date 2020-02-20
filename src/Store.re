@@ -1,11 +1,11 @@
+type unsubscribe = unit => unit;
+
 module type Store = {
   type msg;
   type model;
 
-  let updater: Updater.t(msg, model);
+  let updater: Updater.t(model, msg);
   let subscriptions: model => Sub.t(msg);
-
-  type unsubscribe = unit => unit;
 
   let getModel: unit => model;
   let dispatch: msg => unit;
@@ -31,7 +31,7 @@ module Make =
            type model;
 
            let initial: model;
-           let updater: Updater.t(msg, model);
+           let updater: Updater.t(model, msg);
            let subscriptions: model => Sub.t(msg);
          },
        ) => {
@@ -56,7 +56,7 @@ module Make =
     pendingEffectDispatch: unit => unit,
     latestModel: ref(model),
     pendingEffects: ref(list(Effect.t(msg))),
-    updater: Updater.t(msg, model),
+    updater: Updater.t(model, msg),
     // Legacy store stream for compatibility with old API
     legacyStoreDispatch: ((model, msg)) => unit,
     legacyStoreStream: Stream.t((model, msg)),

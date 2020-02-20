@@ -1,3 +1,6 @@
+type dispatcher('msg) = 'msg => unit;
+type unsubscribe = unit => unit;
+
 module Effect = Effect;
 module Store = Store;
 module Stream = Stream;

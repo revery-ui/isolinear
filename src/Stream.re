@@ -1,13 +1,6 @@
-type sendFunc('a) = 'a => unit;
-/* type complete = unit => unit; */
-
-type streamFunc('a) = sendFunc('a) => unit;
-
-type unsubscribeFunc = unit => unit;
-
-type subscriber('a) = {
+type subscriber('msg) = {
   id: int,
-  onValue: sendFunc('a),
+  onValue: 'msg => unit,
   /* onComplete: complete, */
 };
 
@@ -16,7 +9,7 @@ type t('a) = {
   subscribers: ref(list(subscriber('a))),
 };
 
-let ofDispatch = (f: streamFunc('a)) => {
+let ofDispatch = f => {
   let subscribers: ref(list(subscriber('a))) = ref([]);
 
   let onValue = (v: 'a) => {
@@ -43,7 +36,7 @@ let create = () => {
   (stream, dispatch);
 };
 
-let subscribe = (v: t('a), f: sendFunc('a)) => {
+let subscribe = (v, f) => {
   let id = v.lastSubscriberId^ + 1;
   v.lastSubscriberId := id;
 
@@ -65,7 +58,7 @@ let map = (v: t('a), f: 'a => option('b)) => {
       | Some(v) => send(v)
       }
     )
-    |> (ignore: unsubscribeFunc => unit)
+    |> (ignore: (unit => unit) => unit)
   );
 };
 

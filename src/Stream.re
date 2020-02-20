@@ -4,17 +4,15 @@ type subscriber('msg) = {
   /* onComplete: complete, */
 };
 
-type t('a) = {
+type t('msg) = {
   lastSubscriberId: ref(int),
-  subscribers: ref(list(subscriber('a))),
+  subscribers: ref(list(subscriber('msg))),
 };
 
 let ofDispatch = f => {
-  let subscribers: ref(list(subscriber('a))) = ref([]);
+  let subscribers: ref(list(subscriber('msg))) = ref([]);
 
-  let onValue = (v: 'a) => {
-    List.iter(s => s.onValue(v), subscribers^);
-  };
+  let onValue = value => List.iter(sub => sub.onValue(value), subscribers^);
 
   f(onValue);
 
@@ -22,46 +20,35 @@ let ofDispatch = f => {
 };
 
 let create = () => {
-  let _dispatchFunction = ref(None);
+  let dispatcher = ref(None);
 
-  let stream = ofDispatch(dispatch => _dispatchFunction := Some(dispatch));
+  let stream = ofDispatch(dispatch => dispatcher := Some(dispatch));
 
-  let dispatch = v => {
-    switch (_dispatchFunction^) {
-    | Some(f) => f(v)
-    | None => ()
-    };
-  };
+  let dispatch = msg => Option.iter(dispatch => dispatch(msg), dispatcher^);
 
   (stream, dispatch);
 };
 
-let subscribe = (v, f) => {
-  let id = v.lastSubscriberId^ + 1;
-  v.lastSubscriberId := id;
+let subscribe = (stream, onValue) => {
+  incr(stream.lastSubscriberId);
+  let id = stream.lastSubscriberId^;
 
-  let subscriber = {id, onValue: f};
-  v.subscribers := [subscriber, ...v.subscribers^];
+  stream.subscribers := [{id, onValue}, ...stream.subscribers^];
 
   let unsubscribe = () =>
-    v.subscribers := List.filter(sub => sub.id != id, v.subscribers^);
+    stream.subscribers :=
+      List.filter(sub => sub.id != id, stream.subscribers^);
 
   unsubscribe;
 };
 
+let connect = (dispatch: 'msg => unit, stream: t('msg)) =>
+  subscribe(stream, dispatch);
+
 // TODO: This should be called `filterMap`
-let map = (v: t('a), f: 'a => option('b)) => {
+let map = (stream, f: 'a => option('b)) => {
   ofDispatch(send =>
-    subscribe(v, x =>
-      switch (f(x)) {
-      | None => ()
-      | Some(v) => send(v)
-      }
-    )
+    subscribe(stream, msg => f(msg) |> Option.iter(send))
     |> (ignore: (unit => unit) => unit)
   );
-};
-
-let connect = (dispatch: 'action => unit, stream: t('action)) => {
-  subscribe(stream, v => dispatch(v));
 };

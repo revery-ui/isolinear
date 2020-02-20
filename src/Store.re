@@ -99,8 +99,6 @@ module Make =
     legacyStoreStream,
   };
 
-  type unsubscribe = unit => unit;
-
   let getModel = () => store.latestModel^;
 
   let rec dispatch = (msg: msg) => {
@@ -185,13 +183,11 @@ module Make =
   let onBeforeEffectRan = Stream.subscribe(store.beforeEffectStream);
   let onAfterEffectRan = Stream.subscribe(store.afterEffectStream);
 
-  let onModelChanged = subscription => {
+  let onModelChanged = subscription =>
     Stream.subscribe(store.modelChangedStream, subscription);
-  };
 
-  let onPendingEffect = subscription => {
+  let onPendingEffect = subscription =>
     Stream.subscribe(store.pendingEffectStream, subscription);
-  };
 
   module Deprecated = {
     let getStoreStream = () => {

@@ -4,11 +4,11 @@ type unsubscribe = unit => unit;
 module Stream: {
   type t('msg);
 
-  let ofDispatch: (dispatcher('msg) => unit) => t('msg);
   let create: unit => (t('msg), dispatcher('msg));
+
   let subscribe: (t('msg), dispatcher('msg)) => unsubscribe;
-  let map: (t('a), 'a => option('b)) => t('b);
   let connect: (dispatcher('msg), t('msg)) => unsubscribe;
+  let map: (t('a), 'a => option('b)) => t('b);
 };
 
 module Effect: {
@@ -17,11 +17,13 @@ module Effect: {
   let create: (~name: string, unit => unit) => t('a);
   let createWithDispatch:
     (~name: string, dispatcher('msg) => unit) => t('msg);
-  let getName: t(_) => string;
+
   let none: t(_);
-  let run: (t('msg), dispatcher('msg)) => unit;
   let batch: list(t('msg)) => t('msg);
   let map: ('a => 'b, t('a)) => t('b);
+
+  let name: t(_) => string;
+  let run: (t('msg), dispatcher('msg)) => unit;
 };
 
 module Updater: {
@@ -34,9 +36,9 @@ module Updater: {
 module Sub: {
   type t('msg);
 
+  let none: t('msg);
   let batch: list(t('msg)) => t('msg);
   let map: ('a => 'b, t('a)) => t('b);
-  let none: t('msg);
 
   module type S = {
     type params;
@@ -62,8 +64,8 @@ module Sub: {
   };
 
   module Make:
-    (ConfigInfo: Config) =>
-     S with type msg = ConfigInfo.msg and type params = ConfigInfo.params;
+    (Config: Config) =>
+     S with type msg = Config.msg and type params = Config.params;
 };
 
 module Store: {
@@ -108,10 +110,10 @@ module Store: {
 module Internal: {
   module SubscriptionRunner: {
     module Make:
-      (RunnerConfig: {type msg;}) =>
+      (Config: {type msg;}) =>
        {
         type t;
-        type msg = RunnerConfig.msg;
+        type msg = Config.msg;
 
         let empty: t;
         let run: (~dispatch: msg => unit, ~sub: Sub.t(msg), t) => t;

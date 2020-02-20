@@ -1,43 +1,31 @@
-type dispatchFunction('a) = 'a => unit;
+type dispatcher('msg) = 'msg => unit;
 
-type effect('a) = {
+type effect('msg) = {
   getName: int => string,
-  f: dispatchFunction('a) => unit,
+  f: dispatcher('msg) => unit,
 };
 
-type t('a) = option(effect('a));
+type t('msg) = option(effect('msg));
 
-let _namePrinter = (name, indentLevel) => {
-  String.make(indentLevel, ' ') ++ name;
+module Internal = {
+  let indentName = (name, level) => String.make(level, ' ') ++ name;
 };
-
-let getName = (v: t('a)) =>
-  switch (v) {
-  | None => "(None)"
-  | Some(v) => v.getName(0)
-  };
 
 let create = (~name: string, f: unit => unit) =>
-  Some({getName: _namePrinter(name), f: _ => f()});
+  Some({getName: Internal.indentName(name), f: _ => f()});
 
-let createWithDispatch = (~name: string, f: dispatchFunction('a) => unit) =>
-  Some({getName: _namePrinter(name), f});
+let createWithDispatch = (~name: string, f: dispatcher('msg) => unit) =>
+  Some({getName: Internal.indentName(name), f});
 
-let none: t('a) = None;
+let none: t('msg) = None;
 
-let run = (effect: t('a), dispatch: dispatchFunction('a)) => {
-  switch (effect) {
-  | None => ()
-  | Some(effect) => effect.f(dispatch)
-  };
-};
+let run = (effect: t('msg), dispatch: dispatcher('msg)) =>
+  Option.iter(eff => eff.f(dispatch), effect);
 
-let batch = (effects: list(t('a))) => {
-  let effects = effects |> List.filter(e => e != None);
+let batch = (effects: list(t('msg))) => {
+  let effects = effects |> List.filter(eff => eff != None);
 
-  let execute = dispatch => {
-    List.iter(e => run(e, dispatch), effects);
-  };
+  let execute = dispatch => List.iter(e => run(e, dispatch), effects);
 
   let getName = indentLevel => {
     let start = String.make(indentLevel, ' ') ++ "Batch" ++ ":";
@@ -59,15 +47,16 @@ let batch = (effects: list(t('a))) => {
 
   switch (effects) {
   | [] => None
-  | v => Some({getName, f: execute})
+  | _ => Some({getName, f: execute})
   };
 };
 
 let map = f =>
-  fun
-  | Some(effect) =>
-    Some({...effect, f: dispatch => effect.f(a => dispatch(f(a)))})
-  | None => None;
+  Option.map(eff =>
+    {...eff, f: dispatch => eff.f(msg => dispatch(f(msg)))}
+  );
 
-/* let batch: (~name: string, List(t)) => Effect.t; */
-/* let create: (~name: string, ~f:effectFunction, ()) => Effect.t; */
+let name =
+  fun
+  | Some(eff) => eff.getName(0)
+  | None => "(None)";

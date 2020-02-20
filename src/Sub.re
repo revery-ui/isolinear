@@ -56,7 +56,7 @@ let rec map: ('a => 'b, t('a)) => t('b) =
     switch (sub) {
     | NoSubscription => NoSubscription
     | Subscription(sub, orig) =>
-      let newMapFunction = x => f(orig(x));
+      let newMapFunction = msg => f(orig(msg));
       Subscription(sub, newMapFunction);
     | SubscriptionBatch(subs) => SubscriptionBatch(List.map(map(f), subs))
     };
@@ -69,18 +69,16 @@ module type S = {
   let create: params => t(msg);
 };
 
-module Make = (ConfigInfo: Config) => {
-  type params = ConfigInfo.params;
-  type msg = ConfigInfo.msg;
+module Make = (Config: Config) => {
+  type params = Config.params;
+  type msg = Config.msg;
 
   let handedOffInstance = ref(None);
 
-  let mapper = a => a;
-
   let create = params => {
     Subscription(
-      {handedOffInstance, config: (module ConfigInfo), params, state: None},
-      mapper,
+      {handedOffInstance, config: (module Config), params, state: None},
+      Fun.id,
     );
   };
 };

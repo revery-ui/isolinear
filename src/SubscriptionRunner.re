@@ -12,7 +12,7 @@ module Make = (RunnerConfig: {type msg;}) => {
     switch (subscription) {
     | NoSubscription => "__isolinear__nosubscription__"
     | Subscription({params, state, config: (module Config)}, _) =>
-      Config.subscriptionName ++ "$" ++ Config.getUniqueId(params)
+      Config.name ++ "$" ++ Config.id(params)
     | SubscriptionBatch(_) => "__isolinear__batch__"
     };
   };

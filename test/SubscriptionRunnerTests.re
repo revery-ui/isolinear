@@ -38,9 +38,9 @@ module TestSubscription =
 
     type state = list(testState);
 
-    let subscriptionName = "TestSubscription";
+    let name = "TestSubscription";
 
-    let getUniqueId = params => params |> string_of_int;
+    let id = params => params |> string_of_int;
 
     let init = (~params, ~dispatch) => {
       dispatch(Init(params));

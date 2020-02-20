@@ -52,9 +52,8 @@ module Sub: {
     // State that is carried by the subscription while it is active
     type state;
 
-    let subscriptionName: string;
-
-    let getUniqueId: params => string;
+    let name: string;
+    let id: params => string;
 
     let init: (~params: params, ~dispatch: msg => unit) => state;
     let update:

@@ -17,8 +17,8 @@ module TestSubscription =
 
     type state = unit;
 
-    let subscriptionName = "testSubscription";
-    let getUniqueId = _ => "unique";
+    let name = "testSubscription";
+    let id = _ => "unique";
 
     let init = (~params as _, ~dispatch as _) => {
       incr(startCount);

@@ -1,4 +1,15 @@
-module Stream = Stream;
+module Stream: {
+  type sendFunc('a) = 'a => unit;
+  type streamFunc('a) = sendFunc('a) => unit;
+  type unsubscribeFunc = unit => unit;
+  type t('a);
+
+  let ofDispatch: streamFunc('a) => t('a);
+  let create: unit => (t('a), 'a => unit);
+  let subscribe: (t('a), sendFunc('a)) => unsubscribeFunc;
+  let map: (t('a), 'a => option('b)) => t('b);
+  let connect: ('action => unit, t('action)) => unsubscribeFunc;
+};
 
 module Effect: {
   type dispatchFunction('a) = 'a => unit;

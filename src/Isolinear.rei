@@ -8,7 +8,7 @@ module Stream: {
 
   let subscribe: (t('msg), dispatcher('msg)) => unsubscribe;
   let connect: (dispatcher('msg), t('msg)) => unsubscribe;
-  let map: (t('a), 'a => option('b)) => t('b);
+  let filterMap: (t('a), 'a => option('b)) => t('b);
 };
 
 module Effect: {

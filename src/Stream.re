@@ -45,8 +45,7 @@ let subscribe = (stream, onValue) => {
 let connect = (dispatch: 'msg => unit, stream: t('msg)) =>
   subscribe(stream, dispatch);
 
-// TODO: This should be called `filterMap`
-let map = (stream, f: 'a => option('b)) => {
+let filterMap = (stream, f: 'a => option('b)) => {
   ofDispatch(send =>
     subscribe(stream, msg => f(msg) |> Option.iter(send))
     |> (ignore: (unit => unit) => unit)

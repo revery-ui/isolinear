@@ -1,9 +1,9 @@
 open Sub;
 
-module Make = (RunnerConfig: {type msg;}) => {
+module Make = (Config: {type msg;}) => {
   //type t('msg) = subscription('msg);
 
-  type msg = RunnerConfig.msg;
+  type msg = Config.msg;
   type t = Hashtbl.t(string, Sub.t(msg));
 
   let empty: t = Hashtbl.create(0);
@@ -11,8 +11,8 @@ module Make = (RunnerConfig: {type msg;}) => {
   let getSubscriptionName = (subscription: Sub.t(msg)) => {
     switch (subscription) {
     | NoSubscription => "__isolinear__nosubscription__"
-    | Subscription({params, state, config: (module Config)}, _) =>
-      Config.name ++ "$" ++ Config.id(params)
+    | Subscription({params, state, provider: (module Provider)}, _) =>
+      Provider.name ++ "$" ++ Provider.id(params)
     | SubscriptionBatch(_) => "__isolinear__batch__"
     };
   };
@@ -20,11 +20,11 @@ module Make = (RunnerConfig: {type msg;}) => {
   let dispose = (subscription: Sub.t(msg)) => {
     switch (subscription) {
     | NoSubscription => ()
-    | Subscription({config: (module Config), params, state}, _) =>
+    | Subscription({provider: (module Provider), params, state}, _) =>
       switch (state) {
       // Config was never actually created, so no need to dispose
       | None => ()
-      | Some(state) => Config.dispose(~params, ~state)
+      | Some(state) => Provider.dispose(~params, ~state)
       }
     // This should never be hit, because the batches are removed
     // prior to reconciliation
@@ -36,18 +36,18 @@ module Make = (RunnerConfig: {type msg;}) => {
     switch (subscription) {
     | NoSubscription => NoSubscription
     | Subscription(
-        {config: (module Config), params, state, handedOffInstance},
+        {provider: (module Provider), params, state, handedOffInstance},
         mapper,
       ) =>
       let wrappedDispatch = action => {
         dispatch(mapper(action));
       };
 
-      let state = Config.init(~params, ~dispatch=wrappedDispatch);
+      let state = Provider.init(~params, ~dispatch=wrappedDispatch);
 
       Subscription(
         {
-          config: (module Config),
+          provider: (module Provider),
           params,
           state: Some(state),
           handedOffInstance,
@@ -66,19 +66,19 @@ module Make = (RunnerConfig: {type msg;}) => {
     | (sub, NoSubscription) =>
       dispose(sub);
       NoSubscription;
-    | (Subscription(sub1, oldMapper), Subscription(sub2, newMapper)) =>
+    | (Subscription(oldSub, oldMapper), Subscription(newSub, newMapper)) =>
       let {
-        config: (module ConfigOld),
+        provider: (module OldProvider),
         params as _oldParams,
         state as oldState,
         handedOffInstance as oldH,
-      } = sub1;
+      } = oldSub;
       let {
-        config: (module ConfigNew),
+        provider: (module NewProvider),
         params as newParams,
         state as _newState,
         handedOffInstance as newH,
-      } = sub2;
+      } = newSub;
       // We have two subscriptions that may or may not be the same type.
       // If the keys are correct, they _should_ be the same type - but getting the type system
       // to identify that is tricky! So we use the same 'handedOffInstance' trick as before:t
@@ -103,14 +103,14 @@ module Make = (RunnerConfig: {type msg;}) => {
           };
 
           let newState =
-            ConfigNew.update(
+            NewProvider.update(
               ~params=newParams,
               ~state=oldState,
               ~dispatch=wrappedDispatch,
             );
           Subscription(
             {
-              config: (module ConfigNew),
+              provider: (module NewProvider),
               params: newParams,
               state: Some(newState),
               handedOffInstance: newH,

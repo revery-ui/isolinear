@@ -1,4 +1,4 @@
-module type Config = {
+module type Provider = {
   type params;
   type msg;
 
@@ -14,13 +14,13 @@ module type Config = {
   let dispose: (~params: params, ~state: state) => unit;
 };
 
-type config('params, 'msg, 'state) = (module Config with
-                                         type msg = 'msg and
-                                         type params = 'params and
-                                         type state = 'state);
+type provider('params, 'msg, 'state) = (module Provider with
+                                           type msg = 'msg and
+                                           type params = 'params and
+                                           type state = 'state);
 
 type subscription('params, 'msg, 'state) = {
-  config: config('params, 'msg, 'state),
+  provider: provider('params, 'msg, 'state),
   params: 'params,
   state: option('state),
   // This is the same trick used in ReactMini -
@@ -69,15 +69,15 @@ module type S = {
   let create: params => t(msg);
 };
 
-module Make = (Config: Config) => {
-  type params = Config.params;
-  type msg = Config.msg;
+module Make = (Provider: Provider) => {
+  type params = Provider.params;
+  type msg = Provider.msg;
 
   let handedOffInstance = ref(None);
 
   let create = params => {
     Subscription(
-      {handedOffInstance, config: (module Config), params, state: None},
+      {handedOffInstance, provider: (module Provider), params, state: None},
       Fun.id,
     );
   };

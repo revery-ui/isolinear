@@ -47,7 +47,7 @@ module Sub: {
     let create: params => t(msg);
   };
 
-  module type Config = {
+  module type Provider = {
     type params;
     type msg;
 
@@ -64,8 +64,8 @@ module Sub: {
   };
 
   module Make:
-    (Config: Config) =>
-     S with type msg = Config.msg and type params = Config.params;
+    (Provider: Provider) =>
+     S with type msg = Provider.msg and type params = Provider.params;
 };
 
 module Store: {

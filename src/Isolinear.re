@@ -7,6 +7,6 @@ module Updater = Updater;
 module Sub = Sub;
 module Store = Store;
 
-module Internal = {
+module Testing = {
   module SubscriptionRunner = SubscriptionRunner;
 };

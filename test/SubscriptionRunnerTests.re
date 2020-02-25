@@ -1,7 +1,7 @@
 open TestFramework;
 
 module Sub = Isolinear.Sub;
-module SubscriptionRunner = Isolinear.Internal.SubscriptionRunner;
+module SubscriptionRunner = Isolinear.Testing.SubscriptionRunner;
 
 type testState =
   | Init(int)

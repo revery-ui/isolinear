@@ -107,7 +107,7 @@ module Store: {
      S with type msg = Config.msg and type model = Config.model;
 };
 
-module Internal: {
+module Testing: {
   module SubscriptionRunner: {
     module Make:
       (Config: {type msg;}) =>

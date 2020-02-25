@@ -20,12 +20,14 @@ module Make = (Config: {type msg;}) => {
   let dispose = (subscription: Sub.t(msg)) => {
     switch (subscription) {
     | NoSubscription => ()
+
     | Subscription({provider: (module Provider), params, state}, _) =>
       switch (state) {
       // Config was never actually created, so no need to dispose
       | None => ()
       | Some(state) => Provider.dispose(~params, ~state)
       }
+
     // This should never be hit, because the batches are removed
     // prior to reconciliation
     | SubscriptionBatch(_) => ()
@@ -35,25 +37,19 @@ module Make = (Config: {type msg;}) => {
   let init = (subscription: Sub.t(msg), dispatch: msg => unit) => {
     switch (subscription) {
     | NoSubscription => NoSubscription
+
     | Subscription(
-        {provider: (module Provider), params, state, handedOffInstance},
+        {provider: (module Provider), params, state, pipe},
         mapper,
       ) =>
-      let wrappedDispatch = action => {
-        dispatch(mapper(action));
-      };
-
-      let state = Provider.init(~params, ~dispatch=wrappedDispatch);
+      let state =
+        Provider.init(~params, ~dispatch=msg => dispatch(mapper(msg)));
 
       Subscription(
-        {
-          provider: (module Provider),
-          params,
-          state: Some(state),
-          handedOffInstance,
-        },
+        {provider: (module Provider), params, state: Some(state), pipe},
         mapper,
       );
+
     // This should never be hit
     | SubscriptionBatch(_) => NoSubscription
     };
@@ -62,67 +58,41 @@ module Make = (Config: {type msg;}) => {
   let update = (oldSubscription, newSubscription, dispatch) => {
     switch (oldSubscription, newSubscription) {
     | (NoSubscription, NoSubscription) => NoSubscription
+
     | (NoSubscription, sub) => init(sub, dispatch)
+
     | (sub, NoSubscription) =>
       dispose(sub);
       NoSubscription;
-    | (Subscription(oldSub, oldMapper), Subscription(newSub, newMapper)) =>
-      let {
-        provider: (module OldProvider),
-        params as _oldParams,
-        state as oldState,
-        handedOffInstance as oldH,
-      } = oldSub;
-      let {
-        provider: (module NewProvider),
-        params as newParams,
-        state as _newState,
-        handedOffInstance as newH,
-      } = newSub;
+
+    | (
+        Subscription(oldData, oldMapper),
+        Subscription({provider: (module Provider), _} as newData, newMapper),
+      ) =>
       // We have two subscriptions that may or may not be the same type.
-      // If the keys are correct, they _should_ be the same type - but getting the type system
-      // to identify that is tricky! So we use the same 'handedOffInstance' trick as before:t
-      // https://github.com/reasonml/reason-react/blob/1333211c1ea4da7be61c74084011e23137075ede/ReactMini/src/React.re#L354
-
-      // We take the old instance and set its state on the old handle. If the types are the same,
-      // this will be set on the new handle, since they would be pointing to the same ref.
-      oldH := oldState;
-
-      let ret =
-        switch (newH^) {
-        | None =>
-          // Somehow... the types are different. We'll dispose of the old one, and init the new one
-          dispose(oldSubscription);
-
-          init(newSubscription, dispatch);
-        | Some(oldState) =>
-          // These types do match! And we know about the old state
-
-          let wrappedDispatch = action => {
-            dispatch(newMapper(action));
-          };
-
-          let newState =
-            NewProvider.update(
-              ~params=newParams,
-              ~state=oldState,
-              ~dispatch=wrappedDispatch,
-            );
-          Subscription(
-            {
-              provider: (module NewProvider),
-              params: newParams,
-              state: Some(newState),
-              handedOffInstance: newH,
-            },
-            newMapper,
+      // If the keys are correct, they _should_ be the same type - but getting
+      // the type system to identify that is tricky! So we use the `pipe` to
+      // pass the old state through the pipe from the old instance to the new,
+      // which will give us the same state with the "new" type.
+      switch (Pipe.send(oldData.pipe, newData.pipe, oldData.state)) {
+      | Some(Some(oldState)) =>
+        // These types do match! And we know about the old state
+        let newState =
+          Provider.update(
+            ~params=newData.params, ~state=oldState, ~dispatch=msg =>
+            dispatch(newMapper(msg))
           );
-        };
+        Subscription({...newData, state: Some(newState)}, newMapper);
 
-      // We need to reset the old types now, though!
-      oldH := None;
-      newH := None;
-      ret;
+      | None
+      | Some(None) =>
+        // Somehow... the types are different. We'll dispose of the old one,
+        // and init the new one
+        dispose(oldSubscription);
+
+        init(newSubscription, dispatch);
+      }
+
     // Subscription batch case - should not be hit
     | _ => NoSubscription
     };

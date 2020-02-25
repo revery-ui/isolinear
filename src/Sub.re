@@ -1,9 +1,7 @@
 module type Provider = {
   type params;
   type msg;
-
-  // State that is carried by the subscription while it is active
-  type state;
+  type state; // State that is carried by the subscription while it is active
 
   let name: string;
   let id: params => string;
@@ -23,9 +21,13 @@ type subscription('params, 'msg, 'state) = {
   provider: provider('params, 'msg, 'state),
   params: 'params,
   state: option('state),
-  // This is the same trick used in ReactMini -
-  // used to avoid Obj.magic when updating subscriptions.
-  handedOffInstance: ref(option('state)),
+  // Borrowed from ReactMini - the "pipe" is shared between all subscriptions
+  // from the same provider, allowing data to be passed between them in a
+  // type-safe manner when type equality can't be proven due to `'state` being
+  // an existential in when contained in `t` below
+  //
+  // See https://github.com/reasonml/reason-react/blob/1333211c1ea4da7be61c74084011e23137075ede/ReactMini/src/React.re#L354
+  pipe: Pipe.t(option('state)),
 };
 
 type t('msg) =
@@ -73,11 +75,12 @@ module Make = (Provider: Provider) => {
   type params = Provider.params;
   type msg = Provider.msg;
 
-  let handedOffInstance = ref(None);
+  // This "pipe" will be shared by all subscriptions originating from this provider
+  let pipe = Pipe.create();
 
   let create = params => {
     Subscription(
-      {handedOffInstance, provider: (module Provider), params, state: None},
+      {pipe, provider: (module Provider), params, state: None},
       Fun.id,
     );
   };

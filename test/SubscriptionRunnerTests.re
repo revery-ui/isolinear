@@ -131,7 +131,7 @@ describe("SubscriptionRunner", ({describe, _}) => {
 
       expect.equal(allActions^ |> List.rev, [Init2(1)]);
 
-      let _state = Runner2.run(~dispatch, ~sub=sub1, state);
+      let _: Runner2.t = Runner2.run(~dispatch, ~sub=sub1, state);
 
       expect.equal(allActions^ |> List.rev, [Init2(1), Update2(1)]);
     })

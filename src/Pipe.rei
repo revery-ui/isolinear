@@ -1,4 +1,4 @@
-// Borrowed from ReactMini - the "pipe" (our term) is a mechanism for
+// Borrowed from ReactMini's `handedOffInstance` - the "pipe" is a mechanism for
 // communicating between instances sharing the same pipe, in the presence of
 // existentials where it's impossible to prove that the two values of the same
 // type actually are of the same type. The pipe allows the value to "coerced"

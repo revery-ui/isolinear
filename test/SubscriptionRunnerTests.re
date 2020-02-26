@@ -1,8 +1,7 @@
 open TestFramework;
 
-open Isolinear;
-
-module SubscriptionRunner = Isolinear.Internal.SubscriptionRunner;
+module Sub = Isolinear.Sub;
+module SubscriptionRunner = Isolinear.Testing.SubscriptionRunner;
 
 type testState =
   | Init(int)
@@ -39,9 +38,9 @@ module TestSubscription =
 
     type state = list(testState);
 
-    let subscriptionName = "TestSubscription";
+    let name = "TestSubscription";
 
-    let getUniqueId = params => params |> string_of_int;
+    let id = params => params |> string_of_int;
 
     let init = (~params, ~dispatch) => {
       dispatch(Init(params));
@@ -132,7 +131,7 @@ describe("SubscriptionRunner", ({describe, _}) => {
 
       expect.equal(allActions^ |> List.rev, [Init2(1)]);
 
-      let _state = Runner2.run(~dispatch, ~sub=sub1, state);
+      let _: Runner2.t = Runner2.run(~dispatch, ~sub=sub1, state);
 
       expect.equal(allActions^ |> List.rev, [Init2(1), Update2(1)]);
     })

@@ -1,18 +1,13 @@
-type dispatchFunction('a) = 'a => unit;
+type dispatcher('msg) = 'msg => unit;
 
-type t('a);
+type t('msg);
 
-let create: (~name: string, unit => unit) => t('a);
+let create: (~name: string, unit => unit) => t('msg);
+let createWithDispatch: (~name: string, dispatcher('msg) => unit) => t('msg);
 
-let createWithDispatch:
-  (~name: string, dispatchFunction('a) => unit) => t('a);
-
-let getName: t('a) => string;
-
-let none: t('a);
-
-let run: (t('a), dispatchFunction('a)) => unit;
-
-let batch: list(t('a)) => t('a);
-
+let none: t('msg);
+let batch: list(t('msg)) => t('msg);
 let map: ('a => 'b, t('a)) => t('b);
+
+let name: t('msg) => string;
+let run: (t('msg), dispatcher('msg)) => unit;

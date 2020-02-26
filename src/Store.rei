@@ -1,11 +1,11 @@
-module type Store = {
+type unsubscribe = unit => unit;
+
+module type S = {
   type msg;
   type model;
 
-  let updater: Updater.t(msg, model);
+  let updater: Updater.t(model, msg);
   let subscriptions: model => Sub.t(msg);
-
-  type unsubscribe = unit => unit;
 
   let getModel: unit => model;
   let dispatch: msg => unit;
@@ -31,8 +31,8 @@ module Make:
       type model;
 
       let initial: model;
-      let updater: Updater.t(msg, model);
+      let updater: Updater.t(model, msg);
       let subscriptions: model => Sub.t(msg);
     },
   ) =>
-   Store with type msg = Config.msg and type model = Config.model;
+   S with type msg = Config.msg and type model = Config.model;

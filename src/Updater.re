@@ -1,10 +1,6 @@
-type t('msg, 'model) = ('model, 'msg) => ('model, Effect.t('msg));
+type t('model, 'msg) = ('model, 'msg) => ('model, Effect.t('msg));
 
-type reducer('msg, 'model) = ('model, 'msg) => 'model;
-
-let ofReducer = (v: reducer('msg, 'model), s, a) => {
-  (v(s, a), Effect.none);
-};
+let ofReducer = (reducer, model, msg) => (reducer(model, msg), Effect.none);
 
 let combine = (updaters, state, action) => {
   let (newState, effects) =
@@ -18,7 +14,7 @@ let combine = (updaters, state, action) => {
       updaters,
     );
 
-  let effects = effects |> List.filter(e => e !== Effect.none) |> List.rev;
+  let effects = effects |> List.filter(eff => eff !== Effect.none) |> List.rev;
 
   (newState, Effect.batch(effects));
 };

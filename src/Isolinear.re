@@ -1,9 +1,12 @@
-module Effect = Effect;
-module Store = Store;
-module Stream = Stream;
-module Sub = Sub;
-module Updater = Updater;
+type dispatcher('msg) = 'msg => unit;
+type unsubscribe = unit => unit;
 
-module Internal = {
+module Stream = Stream;
+module Effect = Effect;
+module Updater = Updater;
+module Sub = Sub;
+module Store = Store;
+
+module Testing = {
   module SubscriptionRunner = SubscriptionRunner;
 };

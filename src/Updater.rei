@@ -1,5 +1,4 @@
-type t('msg, 'model) = ('model, 'msg) => ('model, Effect.t('msg));
+type t('model, 'msg) = ('model, 'msg) => ('model, Effect.t('msg));
 
-let ofReducer: (('model, 'msg) => 'model) => t('msg, 'model);
-
-let combine: list(t('msg, 'model)) => t('msg, 'model);
+let ofReducer: (('model, 'msg) => 'model) => t('model, 'msg);
+let combine: list(t('model, 'msg)) => t('model, 'msg);

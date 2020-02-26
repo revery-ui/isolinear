@@ -1,13 +1,10 @@
-module type Config = {
+module type Provider = {
   type params;
   type msg;
+  type state; // State that is carried by the subscription while it is active
 
-  // State that is carried by the subscription while it is active
-  type state;
-
-  let subscriptionName: string;
-
-  let getUniqueId: params => string;
+  let name: string;
+  let id: params => string;
 
   let init: (~params: params, ~dispatch: msg => unit) => state;
   let update:
@@ -15,18 +12,22 @@ module type Config = {
   let dispose: (~params: params, ~state: state) => unit;
 };
 
-type config('params, 'msg, 'state) = (module Config with
-                                         type msg = 'msg and
-                                         type params = 'params and
-                                         type state = 'state);
+type provider('params, 'msg, 'state) = (module Provider with
+                                           type msg = 'msg and
+                                           type params = 'params and
+                                           type state = 'state);
 
 type subscription('params, 'msg, 'state) = {
-  config: config('params, 'msg, 'state),
+  provider: provider('params, 'msg, 'state),
   params: 'params,
   state: option('state),
-  // This is the same trick used in ReactMini -
-  // used to avoid Obj.magic when updating subscriptions.
-  handedOffInstance: ref(option('state)),
+  // Borrowed from ReactMini - the "pipe" is shared between all subscriptions
+  // from the same provider, allowing data to be passed between them in a
+  // type-safe manner when type equality can't be proven due to `'state` being
+  // an existential in when contained in `t` below
+  //
+  // See https://github.com/reasonml/reason-react/blob/1333211c1ea4da7be61c74084011e23137075ede/ReactMini/src/React.re#L354
+  pipe: Pipe.t(option('state)),
 };
 
 type t('msg) =
@@ -57,31 +58,30 @@ let rec map: ('a => 'b, t('a)) => t('b) =
     switch (sub) {
     | NoSubscription => NoSubscription
     | Subscription(sub, orig) =>
-      let newMapFunction = x => f(orig(x));
+      let newMapFunction = msg => f(orig(msg));
       Subscription(sub, newMapFunction);
     | SubscriptionBatch(subs) => SubscriptionBatch(List.map(map(f), subs))
     };
   };
 
-module type Sub = {
+module type S = {
   type params;
   type msg;
 
   let create: params => t(msg);
 };
 
-module Make = (ConfigInfo: Config) => {
-  type params = ConfigInfo.params;
-  type msg = ConfigInfo.msg;
+module Make = (Provider: Provider) => {
+  type params = Provider.params;
+  type msg = Provider.msg;
 
-  let handedOffInstance = ref(None);
-
-  let mapper = a => a;
+  // This "pipe" will be shared by all subscriptions originating from this provider
+  let pipe = Pipe.create();
 
   let create = params => {
     Subscription(
-      {handedOffInstance, config: (module ConfigInfo), params, state: None},
-      mapper,
+      {pipe, provider: (module Provider), params, state: None},
+      Fun.id,
     );
   };
 };

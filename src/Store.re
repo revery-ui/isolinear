@@ -1,11 +1,11 @@
-module type Store = {
+type unsubscribe = unit => unit;
+
+module type S = {
   type msg;
   type model;
 
-  let updater: Updater.t(msg, model);
+  let updater: Updater.t(model, msg);
   let subscriptions: model => Sub.t(msg);
-
-  type unsubscribe = unit => unit;
 
   let getModel: unit => model;
   let dispatch: msg => unit;
@@ -31,7 +31,7 @@ module Make =
            type model;
 
            let initial: model;
-           let updater: Updater.t(msg, model);
+           let updater: Updater.t(model, msg);
            let subscriptions: model => Sub.t(msg);
          },
        ) => {
@@ -56,7 +56,7 @@ module Make =
     pendingEffectDispatch: unit => unit,
     latestModel: ref(model),
     pendingEffects: ref(list(Effect.t(msg))),
-    updater: Updater.t(msg, model),
+    updater: Updater.t(model, msg),
     // Legacy store stream for compatibility with old API
     legacyStoreDispatch: ((model, msg)) => unit,
     legacyStoreStream: Stream.t((model, msg)),
@@ -98,8 +98,6 @@ module Make =
     legacyStoreDispatch,
     legacyStoreStream,
   };
-
-  type unsubscribe = unit => unit;
 
   let getModel = () => store.latestModel^;
 
@@ -185,13 +183,11 @@ module Make =
   let onBeforeEffectRan = Stream.subscribe(store.beforeEffectStream);
   let onAfterEffectRan = Stream.subscribe(store.afterEffectStream);
 
-  let onModelChanged = subscription => {
+  let onModelChanged = subscription =>
     Stream.subscribe(store.modelChangedStream, subscription);
-  };
 
-  let onPendingEffect = subscription => {
+  let onPendingEffect = subscription =>
     Stream.subscribe(store.pendingEffectStream, subscription);
-  };
 
   module Deprecated = {
     let getStoreStream = () => {

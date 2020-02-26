@@ -1,7 +1,7 @@
 open TestFramework;
 
 module Store = Isolinear.Store;
-module Sub = Isolinear.Internal.Sub;
+module Sub = Isolinear.Sub;
 module Effect = Isolinear.Effect;
 
 type testActions =
@@ -17,8 +17,8 @@ module TestSubscription =
 
     type state = unit;
 
-    let subscriptionName = "testSubscription";
-    let getUniqueId = _ => "unique";
+    let name = "testSubscription";
+    let id = _ => "unique";
 
     let init = (~params as _, ~dispatch as _) => {
       incr(startCount);

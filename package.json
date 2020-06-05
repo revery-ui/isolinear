@@ -21,12 +21,15 @@
   },
   "dependencies": {
     "@opam/dune": "^1.7.3",
-    "@esy-ocaml/reason": ">= 3.4.0 < 3.6.0",
+    "@esy-ocaml/reason": "^3.4.0",
     "refmterr": "*",
     "ocaml": "^4.7.0"
   },
+  "resolutions": {
+    "@opam/dune": "2.5.0"
+  },
   "devDependencies": {
     "@opam/merlin": "*",
-    "ocaml": "4.8.1000"
+    "ocaml": "4.9.1000"
   }
 }

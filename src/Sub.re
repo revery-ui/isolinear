@@ -18,6 +18,12 @@ type provider('params, 'msg, 'state) = (module Provider with
                                            type state = 'state);
 
 type subscription('params, 'msg, 'state) = {
+  // The 'latch' serves as a gate - when the subscription is active, it will be 'true'.
+  // However, once the subscription is disposed, it will be switched back to 'false'.
+  // This is to handle the case where a subscription holds on to the `dispatch` function
+  // - either in `update` or `init`, and tries to dispatch when the subscription is no longer available.
+  latch: ref(bool),
+
   provider: provider('params, 'msg, 'state),
   params: 'params,
   state: option('state),
@@ -80,7 +86,7 @@ module Make = (Provider: Provider) => {
 
   let create = params => {
     Subscription(
-      {pipe, provider: (module Provider), params, state: None},
+      {latch: ref(false), pipe, provider: (module Provider), params, state: None},
       Fun.id,
     );
   };

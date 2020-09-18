@@ -23,12 +23,12 @@ module Make = (Config: {type msg;}) => {
 
     | Subscription({provider: (module Provider), params, state, latch}, _) =>
       latch := false;
-      
+
       switch (state) {
       // Config was never actually created, so no need to dispose
       | None => ()
       | Some(state) => Provider.dispose(~params, ~state)
-      }
+      };
 
     // This should never be hit, because the batches are removed
     // prior to reconciliation
@@ -46,10 +46,20 @@ module Make = (Config: {type msg;}) => {
       ) =>
       latch := true;
       let state =
-        Provider.init(~params, ~dispatch=msg => if (latch^) {dispatch(mapper(msg)) });
+        Provider.init(~params, ~dispatch=msg =>
+          if (latch^) {
+            dispatch(mapper(msg));
+          }
+        );
 
       Subscription(
-        {latch, provider: (module Provider), params, state: Some(state), pipe},
+        {
+          latch,
+          provider: (module Provider),
+          params,
+          state: Some(state),
+          pipe,
+        },
         mapper,
       );
 
@@ -85,7 +95,7 @@ module Make = (Config: {type msg;}) => {
           Provider.update(
             ~params=newData.params, ~state=oldState, ~dispatch=msg =>
             if (latch^) {
-              dispatch(newMapper(msg))
+              dispatch(newMapper(msg));
             }
           );
         Subscription({...newData, latch, state: Some(newState)}, newMapper);

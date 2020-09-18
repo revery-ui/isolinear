@@ -87,16 +87,16 @@ module SubscriptionThatHoldsOnToDispatch =
 
 describe("SubscriptionRunner", ({describe, _}) => {
   describe("dispose", ({test, _}) => {
-    test("dispatch called after subscription is gone is a no-op", ({expect, _}) => {
+    test(
+      "dispatch called after subscription is gone is a no-op", ({expect, _}) => {
       let actions: ref(list(testState)) = ref([]);
       let dispatch = action => {
-        actions := [action, ...actions^]
+        actions := [action, ...actions^];
       };
       let sub = SubscriptionThatHoldsOnToDispatch.create(1);
       let runner = Runner.run(~dispatch, ~sub, Runner.empty);
 
-      globalDispatch^
-      |> Option.iter(dispatch => dispatch(Init(1)));
+      globalDispatch^ |> Option.iter(dispatch => dispatch(Init(1)));
 
       // Not disposed... should've gotten an action!
       expect.equal(actions^, [Init(1)]);
@@ -105,14 +105,13 @@ describe("SubscriptionRunner", ({describe, _}) => {
 
       // Dispose of sub
       let _ = Runner.run(~dispatch, ~sub=Isolinear.Sub.none, runner);
-      
-      globalDispatch^
-      |> Option.iter(dispatch => dispatch(Init(2)));
-      
+
+      globalDispatch^ |> Option.iter(dispatch => dispatch(Init(2)));
+
       expect.equal(actions^, []);
-    });
+    })
   });
-  
+
   describe("subscribe", ({test, _}) => {
     test("init is called", ({expect, _}) => {
       let lastAction: ref(option(testState)) = ref(None);

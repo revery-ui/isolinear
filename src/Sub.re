@@ -23,7 +23,6 @@ type subscription('params, 'msg, 'state) = {
   // This is to handle the case where a subscription holds on to the `dispatch` function
   // - either in `update` or `init`, and tries to dispatch when the subscription is no longer available.
   latch: ref(bool),
-
   provider: provider('params, 'msg, 'state),
   params: 'params,
   state: option('state),
@@ -86,7 +85,13 @@ module Make = (Provider: Provider) => {
 
   let create = params => {
     Subscription(
-      {latch: ref(false), pipe, provider: (module Provider), params, state: None},
+      {
+        latch: ref(false),
+        pipe,
+        provider: (module Provider),
+        params,
+        state: None,
+      },
       Fun.id,
     );
   };

@@ -17,16 +17,12 @@
   },
   "homepage": "https://github.com/bryphe/isolinear#readme",
   "esy": {
-    "build": "refmterr dune build -p #{self.name}"
+    "build": "dune build -p #{self.name}"
   },
   "dependencies": {
-    "@opam/dune": "^1.7.3",
-    "@esy-ocaml/reason": "^3.4.0",
-    "refmterr": "*",
+    "@opam/dune": "^2.5.3",
+    "@opam/reason": "^3.4.0",
     "ocaml": "^4.7.0"
-  },
-  "resolutions": {
-    "@opam/dune": "2.5.0"
   },
   "devDependencies": {
     "@opam/merlin": "*",
